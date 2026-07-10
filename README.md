@@ -82,7 +82,7 @@ Chaque app Django dans `backend/apps/` correspond à un module métier
 ## Statut du projet
 
 - [x] Epic 0 — Architecture & Infrastructure (squelette actuel)
-- [ ] Epic 1 — Authentification & Sécurité
-- [ ] Epic 2 — Gestion des coopératives
-- [ ] Epic 3 — Utilisateurs, Rôles, Permissions
-- [ ] ... (voir Roadmap complète)
+- [x] Epic 1 — Authentification & Sécurité
+- [x] Epic 2 — Gestion des coopératives
+- [x] Epic 3 — Utilisateurs, Rôles, Permissions
+
