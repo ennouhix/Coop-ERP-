@@ -1,8 +1,5 @@
 """
 Modèle Warehouse — lieux de stockage physiques de la coopérative.
-
-Dimension consommée directement par le module Stock (Epic 8) : chaque
-mouvement/quantité en stock sera rattaché à un entrepôt précis.
 """
 from __future__ import annotations
 
@@ -33,6 +30,19 @@ class Warehouse(TenantBaseModel):
         constraints = [
             models.UniqueConstraint(fields=["cooperative", "code"], name="unique_warehouse_code_per_cooperative"),
         ]
+
+    def save(self, *args, **kwargs):
+        """Génère automatiquement un code si non défini."""
+        if not self.code and self.cooperative_id:
+            # Évite l'import circulaire
+            from apps.warehouses.services import generate_warehouse_code
+            self.code = generate_warehouse_code(self.cooperative)
+            
+            # Si c'est le premier entrepôt, le définir comme défaut
+            if not Warehouse.all_objects.filter(cooperative=self.cooperative).exists():
+                self.is_default = True
+        
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.code} — {self.name}"

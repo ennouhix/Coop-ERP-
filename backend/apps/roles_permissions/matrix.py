@@ -31,7 +31,7 @@ PERMISSIONS_MATRIX: dict[str, set[str]] = {
         "catalog.view", "catalog.edit",
         "warehouses.view", "warehouses.edit",
         "stock.view", "stock.edit",
-        "purchases.view", "purchases.edit",
+        "purchases.view", "purchases.edit", "purchases.receive",
         "sales.view", "sales.edit",
         "billing.view", "billing.edit",
         "reports.view",
@@ -56,7 +56,8 @@ PERMISSIONS_MATRIX: dict[str, set[str]] = {
         "partners.view", "partners.edit",
         "catalog.view",
         "warehouses.view",
-        "stock.view",
+        "stock.view", "stock.edit",
+        "purchases.view", "purchases.receive",
         "sales.view", "sales.edit",
     },
 }
