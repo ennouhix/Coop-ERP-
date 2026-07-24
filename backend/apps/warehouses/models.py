@@ -44,5 +44,5 @@ class Warehouse(TenantBaseModel):
         
         super().save(*args, **kwargs)
 
-    def __str__(self) -> str:
-        return f"{self.code} — {self.name}"
+    #def __str__(self) -> str:
+     #   return f"{self.code} — {self.name}"     

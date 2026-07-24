@@ -111,7 +111,7 @@ class ProductListCreateView(_CatalogPermissionMixin, generics.ListCreateAPIView)
     ordering_fields = ["sku", "created_at"]
 
     def get_queryset(self):  # noqa: ANN201
-        return Product.objects.select_related("category", "unit").all()
+        return Product.all_objects.filter(cooperative_id=self.request.user.cooperative_id).select_related("category", "unit")
 
     def get_serializer_class(self):  # noqa: ANN201
         return ProductCreateSerializer if self.request.method == "POST" else ProductSerializer
@@ -129,7 +129,7 @@ class ProductDetailView(_CatalogPermissionMixin, generics.RetrieveUpdateAPIView)
     serializer_class = ProductSerializer
 
     def get_queryset(self):  # noqa: ANN201
-        return Product.objects.select_related("category", "unit").all()
+        return Product.all_objects.filter(cooperative_id=self.request.user.cooperative_id).select_related("category", "unit")
 
 
 class ProductDeactivateView(APIView):

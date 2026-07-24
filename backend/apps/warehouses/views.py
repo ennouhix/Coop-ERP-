@@ -35,7 +35,7 @@ class _WarehousePermissionMixin:
 
 class WarehouseListCreateView(_WarehousePermissionMixin, generics.ListCreateAPIView):
     def get_queryset(self):  # noqa: ANN201
-        return Warehouse.objects.select_related("manager").all()
+        return Warehouse.all_objects.filter(cooperative_id=self.request.user.cooperative_id).select_related("manager")
 
     def get_serializer_class(self):  # noqa: ANN201
         return WarehouseCreateSerializer if self.request.method == "POST" else WarehouseSerializer
@@ -51,7 +51,7 @@ class WarehouseDetailView(_WarehousePermissionMixin, generics.RetrieveUpdateAPIV
     serializer_class = WarehouseSerializer
 
     def get_queryset(self):  # noqa: ANN201
-        return Warehouse.objects.select_related("manager").all()
+        return Warehouse.all_objects.filter(cooperative_id=self.request.user.cooperative_id).select_related("manager")
 
 
 class WarehouseSetDefaultView(APIView):

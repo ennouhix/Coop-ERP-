@@ -160,3 +160,29 @@ class MemberTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         member.refresh_from_db()
         self.assertEqual(member.member_number, "ARG-0001")
+
+    def test_deactivated_member_still_visible_in_list_via_status_filter(self) -> None:
+        """
+        Bug réel corrigé : un membre désactivé (is_active=False) devenait
+        invisible PARTOUT via le manager par défaut filtré, y compris avec
+        ?status=inactive — donnant l'impression trompeuse d'une suppression
+        alors que la ligne existe toujours en base.
+        """
+        member = create_member(cooperative=self.cooperative, **VALID_MEMBER_PAYLOAD)
+        self._auth(self.staff)
+        self.client.post(reverse("members:deactivate", args=[member.id]))
+
+        response = self.client.get(self.list_url, {"status": "inactive"})
+        results = response.data["results"] if "results" in response.data else response.data
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["id"], str(member.id))
+
+    def test_deactivated_member_detail_page_still_accessible(self) -> None:
+        """Sans ce correctif, cette requête renvoyait 404 après désactivation."""
+        member = create_member(cooperative=self.cooperative, **VALID_MEMBER_PAYLOAD)
+        self._auth(self.staff)
+        self.client.post(reverse("members:deactivate", args=[member.id]))
+
+        response = self.client.get(reverse("members:detail", args=[member.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["status"], "inactive")

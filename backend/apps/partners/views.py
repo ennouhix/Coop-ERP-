@@ -35,7 +35,12 @@ class PartnerListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):  # noqa: ANN201
         # Toujours en méthode, jamais en attribut de classe : voir le
         # correctif détaillé dans apps/members/views.py (Epic 4).
-        return Partner.objects.all()
+        # `all_objects` (pas `objects`) : sinon un partenaire désactivé
+        # devient invisible partout, y compris via ?status=inactive,
+        # donnant l'impression trompeuse d'une suppression. L'isolation
+        # tenant est restaurée manuellement puisque all_objects n'en
+        # applique aucune.
+        return Partner.all_objects.filter(cooperative_id=self.request.user.cooperative_id)
 
     def get_permissions(self):  # noqa: ANN201
         base = [IsAuthenticated(), IsCooperativeMember()]
@@ -62,7 +67,7 @@ class PartnerDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = PartnerSerializer
 
     def get_queryset(self):  # noqa: ANN201
-        return Partner.objects.all()
+        return Partner.all_objects.filter(cooperative_id=self.request.user.cooperative_id)
 
     def get_permissions(self):  # noqa: ANN201
         base = [IsAuthenticated(), IsCooperativeMember()]

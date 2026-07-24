@@ -1,0 +1,196 @@
+import { ArrowLeft, PackageCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useParams } from "react-router-dom";
+
+import { extractApiErrorMessage } from "../../shared/api/errors";
+import { Button } from "../../shared/ui/Button";
+import { OrderStatusBadge } from "../../shared/ui/OrderStatusBadge";
+import { cancelPurchaseOrder, confirmPurchaseOrder, getPurchaseOrder, receivePurchaseOrder } from "./api";
+import type { PurchaseOrder } from "./types";
+
+function formatMoney(value: string): string {
+  return `${Number(value).toLocaleString("fr-MA", { minimumFractionDigits: 2 })} MAD`;
+}
+
+export function PurchaseOrderDetailPage() {
+  const { t } = useTranslation();
+  const { id } = useParams<{ id: string }>();
+
+  const [order, setOrder] = useState<PurchaseOrder | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isReceiving, setIsReceiving] = useState(false);
+  const [receiptQuantities, setReceiptQuantities] = useState<Record<string, string>>({});
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+
+  function load() {
+    if (!id) return;
+    setIsLoading(true);
+    getPurchaseOrder(id).then(setOrder).finally(() => setIsLoading(false));
+  }
+
+  useEffect(load, [id]);
+
+  async function handleConfirm() {
+    if (!order) return;
+    setError(null);
+    setIsSubmittingAction(true);
+    try {
+      setOrder(await confirmPurchaseOrder(order.id));
+    } catch (err) {
+      setError(extractApiErrorMessage(err, t("common.error_generic")));
+    } finally {
+      setIsSubmittingAction(false);
+    }
+  }
+
+  async function handleCancel() {
+    if (!order) return;
+    setError(null);
+    setIsSubmittingAction(true);
+    try {
+      setOrder(await cancelPurchaseOrder(order.id));
+    } catch (err) {
+      setError(extractApiErrorMessage(err, t("common.error_generic")));
+    } finally {
+      setIsSubmittingAction(false);
+    }
+  }
+
+  function startReceiving() {
+    if (!order) return;
+    const defaults: Record<string, string> = {};
+    order.lines.forEach((line) => {
+      defaults[line.id] = line.quantity_remaining;
+    });
+    setReceiptQuantities(defaults);
+    setIsReceiving(true);
+  }
+
+  async function handleSubmitReceipt() {
+    if (!order) return;
+    setError(null);
+    const receipts = Object.entries(receiptQuantities)
+      .filter(([, qty]) => Number(qty) > 0)
+      .map(([line_id, quantity]) => ({ line_id, quantity }));
+
+    if (receipts.length === 0) {
+      setError(t("purchases.error_receipt_required"));
+      return;
+    }
+
+    setIsSubmittingAction(true);
+    try {
+      const updated = await receivePurchaseOrder(order.id, receipts);
+      setOrder(updated);
+      setIsReceiving(false);
+    } catch (err) {
+      setError(extractApiErrorMessage(err, t("common.error_generic")));
+    } finally {
+      setIsSubmittingAction(false);
+    }
+  }
+
+  if (isLoading) return <p className="text-sm text-ink-700">{t("common.loading")}</p>;
+  if (!order) return <p className="text-sm text-terracotta-600">{t("purchases.not_found")}</p>;
+
+  const canConfirm = order.status === "draft";
+  const canCancel = order.status === "draft" || order.status === "confirmed";
+  const canReceive = order.status === "confirmed" || order.status === "partially_received";
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <Link to="/purchases" className="inline-flex items-center gap-1.5 text-sm text-ink-700 hover:text-ink-900">
+        <ArrowLeft className="h-4 w-4" />
+        {t("purchases.back_to_list")}
+      </Link>
+
+      <div className="mt-3 flex items-center justify-between">
+        <div>
+          <p className="font-mono text-xs text-ink-700/70">{order.order_number}</p>
+          <h1 className="font-display text-2xl font-bold text-ink-900">{order.supplier_name}</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <OrderStatusBadge status={order.status} i18nPrefix="purchases" />
+          {canCancel && (
+            <Button variant="danger" onClick={handleCancel} disabled={isSubmittingAction}>
+              {t("purchases.cancel_order")}
+            </Button>
+          )}
+          {canConfirm && (
+            <Button onClick={handleConfirm} disabled={isSubmittingAction}>
+              {t("purchases.confirm_order")}
+            </Button>
+          )}
+          {canReceive && !isReceiving && (
+            <Button onClick={startReceiving}>
+              <PackageCheck className="h-4 w-4" />
+              {t("purchases.receive_order")}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {error && <p role="alert" className="mt-3 text-start text-sm text-terracotta-600">{error}</p>}
+
+      <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
+        <div><span className="text-ink-700/70">{t("purchases.field.warehouse")} : </span><span className="text-ink-900">{order.warehouse_code}</span></div>
+        <div><span className="text-ink-700/70">{t("purchases.field.order_date")} : </span><span className="text-ink-900">{order.order_date}</span></div>
+        <div><span className="text-ink-700/70">{t("purchases.total")} : </span><span className="font-semibold text-ink-900">{formatMoney(order.total_amount)}</span></div>
+      </div>
+
+      <div className="mt-6 overflow-hidden rounded-lg border border-ink-900/5 bg-white shadow-sm">
+        <table className="w-full text-start text-sm">
+          <thead className="bg-sand-100 text-xs font-medium uppercase tracking-wide text-ink-700/70">
+            <tr>
+              <th className="px-4 py-3 text-start">{t("purchases.field.product")}</th>
+              <th className="px-4 py-3 text-start">{t("purchases.field.quantity")}</th>
+              <th className="px-4 py-3 text-start">{t("purchases.field.received")}</th>
+              <th className="px-4 py-3 text-start">{t("purchases.field.unit_price")}</th>
+              <th className="px-4 py-3 text-start">{t("purchases.field.line_total")}</th>
+              {isReceiving && <th className="px-4 py-3 text-start">{t("purchases.field.receive_now")}</th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-ink-900/5">
+            {order.lines.map((line) => (
+              <tr key={line.id}>
+                <td className="px-4 py-3">
+                  <span className="font-mono text-xs text-ink-700">{line.product_sku}</span> {line.product_name}
+                </td>
+                <td className="px-4 py-3 text-ink-700">{line.quantity_ordered}</td>
+                <td className="px-4 py-3 text-ink-700">{line.quantity_received}</td>
+                <td className="px-4 py-3 text-ink-700">{formatMoney(line.unit_price)}</td>
+                <td className="px-4 py-3 font-medium text-ink-900">{formatMoney(line.line_total)}</td>
+                {isReceiving && (
+                  <td className="px-4 py-3">
+                    <input
+                      type="number" min={0} max={Number(line.quantity_remaining)} step="0.001"
+                      value={receiptQuantities[line.id] ?? ""}
+                      onChange={(e) => setReceiptQuantities((prev) => ({ ...prev, [line.id]: e.target.value }))}
+                      disabled={Number(line.quantity_remaining) <= 0}
+                      className="w-24 rounded-md border border-ink-900/15 px-2 py-1 text-sm focus:border-moss-500 focus:outline-none focus:ring-2 focus:ring-moss-500/20"
+                    />
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {isReceiving && (
+        <div className="mt-3 flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => setIsReceiving(false)}>{t("common.cancel")}</Button>
+          <Button onClick={handleSubmitReceipt} disabled={isSubmittingAction}>
+            {isSubmittingAction ? t("common.loading") : t("purchases.confirm_receipt")}
+          </Button>
+        </div>
+      )}
+
+      {order.notes && (
+        <p className="mt-4 text-sm text-ink-700"><span className="font-medium">{t("purchases.field.notes")} : </span>{order.notes}</p>
+      )}
+    </div>
+  );
+}

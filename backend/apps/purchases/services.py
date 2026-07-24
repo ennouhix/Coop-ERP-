@@ -16,6 +16,7 @@ from typing import Optional
 
 from django.db import transaction
 
+from apps.audit.services import log_activity
 from apps.cooperatives.models import Cooperative
 from apps.inventory import services as inventory_services
 from apps.inventory.models import StockMovementReason
@@ -94,6 +95,11 @@ def confirm_purchase_order(*, order: PurchaseOrder, actor) -> PurchaseOrder:  # 
     order.status = PurchaseOrderStatus.CONFIRMED
     order.updated_by = actor
     order.save(update_fields=["status", "updated_by"])
+
+    log_activity(
+        cooperative=order.cooperative, actor=actor, action="purchase_order.confirmed",
+        target_type="PurchaseOrder", target_id=order.id, target_repr=order.order_number,
+    )
     return order
 
 
@@ -107,6 +113,11 @@ def cancel_purchase_order(*, order: PurchaseOrder, actor) -> PurchaseOrder:  # n
     order.status = PurchaseOrderStatus.CANCELLED
     order.updated_by = actor
     order.save(update_fields=["status", "updated_by"])
+
+    log_activity(
+        cooperative=order.cooperative, actor=actor, action="purchase_order.cancelled",
+        target_type="PurchaseOrder", target_id=order.id, target_repr=order.order_number,
+    )
     return order
 
 
@@ -150,4 +161,10 @@ def record_purchase_receipt(*, order: PurchaseOrder, actor, receipts: list) -> P
     order.status = PurchaseOrderStatus.RECEIVED if order.is_fully_received else PurchaseOrderStatus.PARTIALLY_RECEIVED
     order.updated_by = actor
     order.save(update_fields=["status", "updated_by"])
+
+    log_activity(
+        cooperative=order.cooperative, actor=actor, action="purchase_order.received",
+        target_type="PurchaseOrder", target_id=order.id, target_repr=order.order_number,
+        metadata={"receipts": [{"line_id": str(r["line_id"]), "quantity": str(r["quantity"])} for r in receipts], "new_status": order.status},
+    )
     return order

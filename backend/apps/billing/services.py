@@ -14,6 +14,7 @@ from typing import Optional
 
 from django.db import transaction
 
+from apps.audit.services import log_activity
 from apps.billing.models import Invoice, InvoiceLine, InvoiceStatus, Payment
 from apps.cooperatives.models import Cooperative
 from apps.partners.models import Partner
@@ -125,6 +126,12 @@ def issue_invoice(*, invoice: Invoice, actor) -> Invoice:  # noqa: ANN001
     invoice.status = InvoiceStatus.ISSUED
     invoice.updated_by = actor
     invoice.save(update_fields=["status", "updated_by"])
+
+    log_activity(
+        cooperative=invoice.cooperative, actor=actor, action="invoice.issued",
+        target_type="Invoice", target_id=invoice.id, target_repr=invoice.invoice_number,
+        metadata={"total_amount": str(invoice.total_amount)},
+    )
     return invoice
 
 
@@ -138,6 +145,11 @@ def cancel_invoice(*, invoice: Invoice, actor) -> Invoice:  # noqa: ANN001
     invoice.status = InvoiceStatus.CANCELLED
     invoice.updated_by = actor
     invoice.save(update_fields=["status", "updated_by"])
+
+    log_activity(
+        cooperative=invoice.cooperative, actor=actor, action="invoice.cancelled",
+        target_type="Invoice", target_id=invoice.id, target_repr=invoice.invoice_number,
+    )
     return invoice
 
 
@@ -171,5 +183,11 @@ def record_payment(
     )
     locked_invoice.updated_by = actor
     locked_invoice.save(update_fields=["status", "updated_by"])
+
+    log_activity(
+        cooperative=locked_invoice.cooperative, actor=actor, action="invoice.payment_recorded",
+        target_type="Payment", target_id=payment.id, target_repr=f"{amount} — {locked_invoice.invoice_number}",
+        metadata={"amount": str(amount), "payment_method": payment_method, "new_status": locked_invoice.status},
+    )
 
     return payment

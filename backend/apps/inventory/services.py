@@ -13,6 +13,7 @@ from decimal import Decimal
 
 from django.db import IntegrityError, transaction
 
+from apps.audit.services import log_activity
 from apps.catalog.models import Product
 from apps.inventory.models import StockLevel, StockMovement, StockMovementReason, StockMovementType
 from apps.warehouses.models import Warehouse
@@ -64,11 +65,18 @@ def record_stock_in(
     level.quantity += quantity
     level.save(update_fields=["quantity"])
 
-    return StockMovement.objects.create(
+    movement = StockMovement.objects.create(
         cooperative=product.cooperative, movement_type=StockMovementType.IN, reason=reason,
         product=product, warehouse=warehouse, quantity=quantity,
         reference=reference, notes=notes, created_by=actor,
     )
+    log_activity(
+        cooperative=product.cooperative, actor=actor, action="stock.in",
+        target_type="StockMovement", target_id=movement.id,
+        target_repr=f"{product.sku} +{quantity} @ {warehouse.code}",
+        metadata={"reason": reason, "reference": reference},
+    )
+    return movement
 
 
 @transaction.atomic
@@ -88,11 +96,18 @@ def record_stock_out(
     level.quantity -= quantity
     level.save(update_fields=["quantity"])
 
-    return StockMovement.objects.create(
+    movement = StockMovement.objects.create(
         cooperative=product.cooperative, movement_type=StockMovementType.OUT, reason=reason,
         product=product, warehouse=warehouse, quantity=quantity,
         reference=reference, notes=notes, created_by=actor,
     )
+    log_activity(
+        cooperative=product.cooperative, actor=actor, action="stock.out",
+        target_type="StockMovement", target_id=movement.id,
+        target_repr=f"{product.sku} -{quantity} @ {warehouse.code}",
+        metadata={"reason": reason, "reference": reference},
+    )
+    return movement
 
 
 @transaction.atomic
@@ -123,12 +138,19 @@ def record_stock_transfer(
     dest_level.quantity += quantity
     dest_level.save(update_fields=["quantity"])
 
-    return StockMovement.objects.create(
+    movement = StockMovement.objects.create(
         cooperative=product.cooperative, movement_type=StockMovementType.TRANSFER,
         reason=StockMovementReason.TRANSFER,
         product=product, warehouse=from_warehouse, destination_warehouse=to_warehouse,
         quantity=quantity, reference=reference, notes=notes, created_by=actor,
     )
+    log_activity(
+        cooperative=product.cooperative, actor=actor, action="stock.transfer",
+        target_type="StockMovement", target_id=movement.id,
+        target_repr=f"{product.sku} {quantity} {from_warehouse.code} -> {to_warehouse.code}",
+        metadata={"reference": reference},
+    )
+    return movement
 
 
 def get_current_quantity(*, product: Product, warehouse: Warehouse) -> Decimal:

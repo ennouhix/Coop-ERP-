@@ -13,6 +13,7 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
 
+from apps.audit.services import log_activity
 from apps.authentication.models import UserRole
 from apps.users.models import Invitation, InvitationStatus
 
@@ -61,8 +62,15 @@ def change_user_role(*, actor, target_user, new_role: str) -> None:  # noqa: ANN
     if new_role != UserRole.OWNER:
         _assert_not_last_owner(target_user)
 
+    old_role = target_user.role
     target_user.role = new_role
     target_user.save(update_fields=["role"])
+
+    log_activity(
+        cooperative=target_user.cooperative, actor=actor, action="user.role_changed",
+        target_type="User", target_id=target_user.id, target_repr=target_user.email,
+        metadata={"old_role": old_role, "new_role": new_role},
+    )
 
 
 def deactivate_user(*, actor, target_user) -> None:  # noqa: ANN001
@@ -75,6 +83,11 @@ def deactivate_user(*, actor, target_user) -> None:  # noqa: ANN001
     _assert_not_last_owner(target_user)
     target_user.is_active = False
     target_user.save(update_fields=["is_active"])
+
+    log_activity(
+        cooperative=target_user.cooperative, actor=actor, action="user.deactivated",
+        target_type="User", target_id=target_user.id, target_repr=target_user.email,
+    )
 
 
 def reactivate_user(*, target_user) -> None:  # noqa: ANN001
@@ -101,6 +114,13 @@ def create_invitation(*, actor, cooperative, email: str, role: str) -> Invitatio
         cooperative=cooperative, email=email, role=role, invited_by=actor
     )
     _send_invitation_email(invitation)
+
+    log_activity(
+        cooperative=cooperative, actor=actor, action="user.invited",
+        target_type="Invitation", target_id=invitation.id, target_repr=invitation.email,
+        metadata={"role": role},
+    )
+
     return invitation
 
 

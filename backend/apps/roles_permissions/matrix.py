@@ -35,6 +35,7 @@ PERMISSIONS_MATRIX: dict[str, set[str]] = {
         "sales.view", "sales.edit",
         "billing.view", "billing.edit",
         "reports.view",
+        "audit.view",
     },
     UserRole.ACCOUNTANT: {
         "users.view",

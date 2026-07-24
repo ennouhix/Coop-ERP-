@@ -41,7 +41,15 @@ class MemberListCreateView(generics.ListCreateAPIView):
         # jamais filtrer. get_queryset() en méthode garantit une évaluation
         # fraîche à CHAQUE requête, une fois le tenant résolu par
         # TenantAwareJWTAuthentication.
-        return Member.objects.all()
+        #
+        # `all_objects` (pas `objects`) : le manager par défaut filtre
+        # automatiquement is_active=True, ce qui rendrait un membre
+        # désactivé invisible PARTOUT (y compris avec le filtre
+        # ?status=inactive), donnant l'impression trompeuse d'une
+        # suppression alors que la ligne existe toujours en base.
+        # `all_objects` n'appliquant aucun filtrage automatique (ni tenant,
+        # ni is_active), on restaure l'isolation multi-tenant manuellement.
+        return Member.all_objects.filter(cooperative_id=self.request.user.cooperative_id)
 
     def get_permissions(self):  # noqa: ANN201
         base = [IsAuthenticated(), IsCooperativeMember()]
@@ -65,7 +73,10 @@ class MemberDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = MemberSerializer
 
     def get_queryset(self):  # noqa: ANN201
-        return Member.objects.all()
+        # Même raison qu'au-dessus : sans all_objects, accéder à la fiche
+        # d'un membre qu'on vient de désactiver renverrait une 404,
+        # empêchant même de le réactiver depuis sa propre page.
+        return Member.all_objects.filter(cooperative_id=self.request.user.cooperative_id)
 
     def get_permissions(self):  # noqa: ANN201
         base = [IsAuthenticated(), IsCooperativeMember()]

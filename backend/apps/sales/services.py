@@ -15,6 +15,7 @@ from typing import Optional
 
 from django.db import transaction
 
+from apps.audit.services import log_activity
 from apps.cooperatives.models import Cooperative
 from apps.inventory import services as inventory_services
 from apps.inventory.models import StockMovementReason
@@ -118,6 +119,11 @@ def confirm_sales_order(*, order: SalesOrder, actor) -> SalesOrder:  # noqa: ANN
     order.status = SalesOrderStatus.CONFIRMED
     order.updated_by = actor
     order.save(update_fields=["status", "updated_by"])
+
+    log_activity(
+        cooperative=order.cooperative, actor=actor, action="sales_order.confirmed",
+        target_type="SalesOrder", target_id=order.id, target_repr=order.order_number,
+    )
     return order
 
 
@@ -131,6 +137,11 @@ def cancel_sales_order(*, order: SalesOrder, actor) -> SalesOrder:  # noqa: ANN0
     order.status = SalesOrderStatus.CANCELLED
     order.updated_by = actor
     order.save(update_fields=["status", "updated_by"])
+
+    log_activity(
+        cooperative=order.cooperative, actor=actor, action="sales_order.cancelled",
+        target_type="SalesOrder", target_id=order.id, target_repr=order.order_number,
+    )
     return order
 
 
@@ -176,4 +187,10 @@ def record_sales_delivery(*, order: SalesOrder, actor, deliveries: list) -> Sale
     order.status = SalesOrderStatus.DELIVERED if order.is_fully_delivered else SalesOrderStatus.PARTIALLY_DELIVERED
     order.updated_by = actor
     order.save(update_fields=["status", "updated_by"])
+
+    log_activity(
+        cooperative=order.cooperative, actor=actor, action="sales_order.delivered",
+        target_type="SalesOrder", target_id=order.id, target_repr=order.order_number,
+        metadata={"deliveries": [{"line_id": str(d["line_id"]), "quantity": str(d["quantity"])} for d in deliveries], "new_status": order.status},
+    )
     return order
