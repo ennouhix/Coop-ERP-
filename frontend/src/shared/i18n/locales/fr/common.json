@@ -409,5 +409,19 @@
       "region": "Région",
       "default_language": "Langue par défaut"
     }
+  },
+  "reports": {
+    "title": "Rapports & Exports",
+    "subtitle": "Exportez les données de votre coopérative au format Excel (.xlsx).",
+    "members_title": "Adhérents & Membres",
+    "members_desc": "Liste exhaustive de tous les adhérents avec coordonnées, CIN, statut et parts sociales.",
+    "stock_title": "Mouvements de Stock",
+    "stock_desc": "Historique détaillé des entrées, sorties et transferts inter-entrepôts.",
+    "sales_title": "Commandes de Vente",
+    "sales_desc": "Synthèse de toutes les commandes clients, leurs montants et statuts de validation.",
+    "date_from": "Date de début",
+    "date_to": "Date de fin",
+    "download_button": "Télécharger (.xlsx)",
+    "error_export_failed": "Échec du téléchargement du rapport. Veuillez réessayer."
   }
 }

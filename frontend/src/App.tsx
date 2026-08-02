@@ -32,6 +32,7 @@ import { TeamListPage } from "./features/team/TeamListPage";
 import { InvoiceCreatePage } from "./features/billing/InvoiceCreatePage";
 import { InvoiceDetailPage } from "./features/billing/InvoiceDetailPage";
 import { InvoicesListPage } from "./features/billing/InvoicesListPage";
+import { ReportsPage } from "./features/reports/ReportsPage";
 import { AppShell } from "./shared/layout/AppShell";
 import { NAV_ITEMS } from "./shared/layout/navConfig";
 import { ProtectedRoute } from "./shared/routing/ProtectedRoute";
@@ -81,6 +82,7 @@ export function App() {
                   <Route path="/billing" element={<InvoicesListPage />} />
                   <Route path="/billing/new" element={<InvoiceCreatePage />} />
                   <Route path="/billing/:id" element={<InvoiceDetailPage />} />
+                  <Route path="/reports" element={<ReportsPage />} />
                   <Route path="/team" element={<TeamListPage />} />
                   <Route path="/settings" element={<CooperativeSettingsPage />} />
                   {NAV_ITEMS.filter((item) => item.comingSoon).map((item) => (

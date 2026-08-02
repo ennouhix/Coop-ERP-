@@ -22,7 +22,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/purchases", labelKey: "nav.purchases", icon: ShoppingCart },
   { to: "/sales", labelKey: "nav.sales", icon: TrendingUp },
   { to: "/billing", labelKey: "nav.billing", icon: Receipt },
-  { to: "/reports", labelKey: "nav.reports", icon: FileBarChart, comingSoon: true },
+  { to: "/reports", labelKey: "nav.reports", icon: FileBarChart },
   { to: "/team", labelKey: "nav.team", icon: UserCog },
   { to: "/settings", labelKey: "nav.settings", icon: Settings },
 ];
