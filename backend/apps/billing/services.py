@@ -117,6 +117,75 @@ def generate_invoice_from_sales_order(
 
 
 @transaction.atomic
+def _create_accounting_entry_for_invoice(invoice: Invoice, actor) -> None:
+    from apps.accounting.models import Account, Journal, JournalType
+    from apps.accounting.services import create_accounting_entry, post_entry
+
+    coop = invoice.cooperative
+    sales_journal = Journal.objects.filter(cooperative=coop, journal_type=JournalType.SALES).first()
+    if not sales_journal:
+        return
+
+    client_account = Account.objects.filter(cooperative=coop, code__in=["3421", "342", "34"]).first()
+    revenue_account = Account.objects.filter(cooperative=coop, code__in=["701", "70", "7"]).first()
+
+    if not client_account or not revenue_account:
+        return
+
+    try:
+        entry = create_accounting_entry(
+            cooperative=coop,
+            journal=sales_journal,
+            entry_date=invoice.issue_date,
+            description=f"Facture {invoice.invoice_number} — Client {invoice.customer.name}",
+            lines_data=[
+                {"account": client_account, "label": f"Client {invoice.customer.name}", "debit": invoice.total_amount, "credit": Decimal("0")},
+                {"account": revenue_account, "label": f"Vente {invoice.invoice_number}", "debit": Decimal("0"), "credit": invoice.total_amount},
+            ],
+            actor=actor,
+        )
+        post_entry(entry=entry, actor=actor)
+    except Exception:
+        pass
+
+
+def _create_accounting_entry_for_payment(payment: Payment, actor) -> None:
+    from apps.accounting.models import Account, Journal, JournalType
+    from apps.accounting.services import create_accounting_entry, post_entry
+
+    coop = payment.cooperative
+    j_type = JournalType.CASH if payment.payment_method == "cash" else JournalType.BANK
+    journal = Journal.objects.filter(cooperative=coop, journal_type=j_type).first()
+    if not journal:
+        journal = Journal.objects.filter(cooperative=coop, journal_type=JournalType.GENERAL).first()
+    if not journal:
+        return
+
+    treasury_code = "5161" if payment.payment_method == "cash" else "5141"
+    treasury_account = Account.objects.filter(cooperative=coop, code__startswith=treasury_code[:3]).first()
+    client_account = Account.objects.filter(cooperative=coop, code__in=["3421", "342", "34"]).first()
+
+    if not treasury_account or not client_account:
+        return
+
+    try:
+        entry = create_accounting_entry(
+            cooperative=coop,
+            journal=journal,
+            entry_date=payment.payment_date,
+            description=f"Règlement Facture {payment.invoice.invoice_number} — {payment.payment_method}",
+            lines_data=[
+                {"account": treasury_account, "label": f"Encaissement {payment.invoice.invoice_number}", "debit": payment.amount, "credit": Decimal("0")},
+                {"account": client_account, "label": f"Règlement Client {payment.invoice.customer.name}", "debit": Decimal("0"), "credit": payment.amount},
+            ],
+            actor=actor,
+        )
+        post_entry(entry=entry, actor=actor)
+    except Exception:
+        pass
+
+
+@transaction.atomic
 def issue_invoice(*, invoice: Invoice, actor) -> Invoice:  # noqa: ANN001
     if invoice.status != InvoiceStatus.DRAFT:
         raise InvoiceError("Seule une facture en brouillon peut être émise.")
@@ -132,6 +201,7 @@ def issue_invoice(*, invoice: Invoice, actor) -> Invoice:  # noqa: ANN001
         target_type="Invoice", target_id=invoice.id, target_repr=invoice.invoice_number,
         metadata={"total_amount": str(invoice.total_amount)},
     )
+    _create_accounting_entry_for_invoice(invoice, actor)
     return invoice
 
 
@@ -189,5 +259,7 @@ def record_payment(
         target_type="Payment", target_id=payment.id, target_repr=f"{amount} — {locked_invoice.invoice_number}",
         metadata={"amount": str(amount), "payment_method": payment_method, "new_status": locked_invoice.status},
     )
+    _create_accounting_entry_for_payment(payment, actor)
 
     return payment
+

@@ -1,4 +1,4 @@
-import { ArrowLeft, PackageCheck } from "lucide-react";
+import { ArrowLeft, FileDown, PackageCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
@@ -6,6 +6,7 @@ import { Link, useParams } from "react-router-dom";
 import { extractApiErrorMessage } from "../../shared/api/errors";
 import { Button } from "../../shared/ui/Button";
 import { OrderStatusBadge } from "../../shared/ui/OrderStatusBadge";
+import { downloadPurchaseOrder, downloadReceipt } from "../documents/api";
 import { cancelPurchaseOrder, confirmPurchaseOrder, getPurchaseOrder, receivePurchaseOrder } from "./api";
 import type { PurchaseOrder } from "./types";
 
@@ -23,6 +24,7 @@ export function PurchaseOrderDetailPage() {
   const [isReceiving, setIsReceiving] = useState(false);
   const [receiptQuantities, setReceiptQuantities] = useState<Record<string, string>>({});
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   function load() {
     if (!id) return;
@@ -55,6 +57,23 @@ export function PurchaseOrderDetailPage() {
       setError(extractApiErrorMessage(err, t("common.error_generic")));
     } finally {
       setIsSubmittingAction(false);
+    }
+  }
+
+  async function handleDownload(kind: "purchase_order" | "receipt") {
+    if (!order) return;
+    setError(null);
+    setIsDownloadingPdf(true);
+    try {
+      if (kind === "purchase_order") {
+        await downloadPurchaseOrder(order.id, order.order_number);
+      } else {
+        await downloadReceipt(order.id, order.order_number);
+      }
+    } catch (err) {
+      setError(extractApiErrorMessage(err, t("common.error_generic")));
+    } finally {
+      setIsDownloadingPdf(false);
     }
   }
 
@@ -98,6 +117,7 @@ export function PurchaseOrderDetailPage() {
   const canConfirm = order.status === "draft";
   const canCancel = order.status === "draft" || order.status === "confirmed";
   const canReceive = order.status === "confirmed" || order.status === "partially_received";
+  const canDownloadReceipt = order.status === "partially_received" || order.status === "received";
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -109,7 +129,7 @@ export function PurchaseOrderDetailPage() {
       <div className="mt-3 flex items-center justify-between">
         <div>
           <p className="font-mono text-xs text-ink-700/70">{order.order_number}</p>
-          <h1 className="font-display text-2xl font-bold text-ink-900">{order.supplier_name}</h1>
+          <h1 className="page-title">{order.supplier_name}</h1>
         </div>
         <div className="flex items-center gap-2">
           <OrderStatusBadge status={order.status} i18nPrefix="purchases" />
@@ -129,6 +149,16 @@ export function PurchaseOrderDetailPage() {
               {t("purchases.receive_order")}
             </Button>
           )}
+          <Button variant="secondary" onClick={() => handleDownload("purchase_order")} disabled={isDownloadingPdf}>
+            <FileDown className="h-4 w-4" />
+            {t("purchases.download_purchase_order")}
+          </Button>
+          {canDownloadReceipt && (
+            <Button variant="secondary" onClick={() => handleDownload("receipt")} disabled={isDownloadingPdf}>
+              <FileDown className="h-4 w-4" />
+              {t("purchases.download_receipt")}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -140,9 +170,9 @@ export function PurchaseOrderDetailPage() {
         <div><span className="text-ink-700/70">{t("purchases.total")} : </span><span className="font-semibold text-ink-900">{formatMoney(order.total_amount)}</span></div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-ink-900/5 bg-white shadow-sm">
+      <div className="mt-6 card">
         <table className="w-full text-start text-sm">
-          <thead className="bg-sand-100 text-xs font-medium uppercase tracking-wide text-ink-700/70">
+          <thead className="bg-sand-100 font-mono text-[11px] font-medium uppercase tracking-widest text-ink-600">
             <tr>
               <th className="px-4 py-3 text-start">{t("purchases.field.product")}</th>
               <th className="px-4 py-3 text-start">{t("purchases.field.quantity")}</th>

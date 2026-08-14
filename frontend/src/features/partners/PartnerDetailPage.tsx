@@ -88,7 +88,7 @@ export function PartnerDetailPage() {
       <div className="mt-3 flex items-center justify-between">
         <div>
           <p className="font-mono text-xs text-ink-700/70">{partner.code}</p>
-          <h1 className="font-display text-2xl font-bold text-ink-900">{partner.name}</h1>
+          <h1 className="page-title">{partner.name}</h1>
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge label={t(`partners.status_${partner.status}`)} tone={partner.status === "active" ? "moss" : "neutral"} />
@@ -101,7 +101,7 @@ export function PartnerDetailPage() {
         </div>
       </div>
 
-      <div className="mt-6 space-y-4 rounded-lg border border-ink-900/5 bg-white p-6 shadow-sm">
+      <div className="mt-6 space-y-4 card card-pad">
         <div>
           <span className="mb-1 block text-start text-sm font-medium text-ink-800">{t("partners.field.role")}</span>
           <div className="flex gap-4">

@@ -76,9 +76,9 @@ export function PurchaseOrderCreatePage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="font-display text-2xl font-bold text-ink-900">{t("purchases.new")}</h1>
+      <h1 className="page-title">{t("purchases.new")}</h1>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-5 rounded-lg border border-ink-900/5 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-5 card card-pad">
         <div className="grid grid-cols-2 gap-4">
           <SelectField
             id="supplier_id" label={t("purchases.field.supplier")} required

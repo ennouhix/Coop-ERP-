@@ -16,6 +16,8 @@ export interface AuthUser {
   last_name: string;
   role: string;
   cooperative_id: string | null;
+  /** Modules métier accessibles au rôle (RBAC), pour afficher/masquer le sidebar. */
+  modules: string[];
 }
 
 interface AuthState {

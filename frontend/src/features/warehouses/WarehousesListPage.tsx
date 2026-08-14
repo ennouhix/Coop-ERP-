@@ -38,8 +38,8 @@ export function WarehousesListPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink-900">{t("warehouses.title")}</h1>
-          <p className="mt-1 text-sm text-ink-700">{t("warehouses.count", { count: warehouses.length })}</p>
+          <h1 className="page-title">{t("warehouses.title")}</h1>
+          <p className="page-heading-subtitle">{t("warehouses.count", { count: warehouses.length })}</p>
         </div>
         <Link to="/warehouses/new">
           <Button>
@@ -51,9 +51,9 @@ export function WarehousesListPage() {
 
       {error && <p role="alert" className="mt-4 text-start text-sm text-terracotta-600">{error}</p>}
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-ink-900/5 bg-white shadow-sm">
+      <div className="mt-6 card">
         <table className="w-full text-start text-sm">
-          <thead className="bg-sand-100 text-xs font-medium uppercase tracking-wide text-ink-700/70">
+          <thead className="bg-sand-100 font-mono text-[11px] font-medium uppercase tracking-widest text-ink-600">
             <tr>
               <th className="px-4 py-3 text-start">{t("warehouses.field.code")}</th>
               <th className="px-4 py-3 text-start">{t("warehouses.field.name")}</th>

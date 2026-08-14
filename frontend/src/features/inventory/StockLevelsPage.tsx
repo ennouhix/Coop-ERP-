@@ -34,7 +34,7 @@ export function StockLevelsPage() {
       <InventoryTabs />
 
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold text-ink-900">{t("inventory.tab_levels")}</h1>
+        <h1 className="page-title">{t("inventory.tab_levels")}</h1>
         <div className="flex gap-2">
           <Link to="/inventory/movements/in">
             <Button variant="secondary"><PackagePlus className="h-4 w-4" />{t("inventory.action_in")}</Button>
@@ -52,7 +52,7 @@ export function StockLevelsPage() {
         <select
           value={warehouseFilter}
           onChange={(e) => setWarehouseFilter(e.target.value)}
-          className="rounded-md border border-ink-900/15 px-3 py-2 text-sm focus:border-moss-500 focus:outline-none focus:ring-2 focus:ring-moss-500/20"
+          className="input-inline"
         >
           <option value="">{t("inventory.all_warehouses")}</option>
           {warehouses.map((w) => (
@@ -61,9 +61,9 @@ export function StockLevelsPage() {
         </select>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-ink-900/5 bg-white shadow-sm">
+      <div className="mt-4 card">
         <table className="w-full text-start text-sm">
-          <thead className="bg-sand-100 text-xs font-medium uppercase tracking-wide text-ink-700/70">
+          <thead className="bg-sand-100 font-mono text-[11px] font-medium uppercase tracking-widest text-ink-600">
             <tr>
               <th className="px-4 py-3 text-start">{t("inventory.field.product")}</th>
               <th className="px-4 py-3 text-start">{t("inventory.field.warehouse")}</th>

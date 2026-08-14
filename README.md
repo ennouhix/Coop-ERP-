@@ -8,6 +8,16 @@ ERP SaaS multi-tenant, bilingue FR/AR, construit avec Django REST Framework + Re
 - **Frontend** : React 18, TypeScript, Vite, Tailwind CSS, i18next (FR/AR + RTL)
 - **Infra** : Docker, Docker Compose, Nginx, GitHub Actions
 
+## Documentation
+
+La documentation complète se trouve dans [`docs/`](docs/README.md) :
+
+- [Architecture & multi-tenancy](docs/architecture.md)
+- [Modules métier & API](docs/modules.md)
+- [Développement & conventions](docs/development.md)
+- [Déploiement](docs/deployment.md)
+- [Go-to-market & évolutions](docs/go-to-market.md)
+
 ## Démarrage rapide (développement local)
 
 ### 1. Prérequis
@@ -29,7 +39,7 @@ docker compose up --build
 ```
 
 Cela démarre :
-- `db` — PostgreSQL sur le port 5432
+- `db` — PostgreSQL sur localhost:5436 (→ 5432 dans le conteneur)
 - `redis` — Redis sur le port 6379
 - `backend` — API Django sur http://localhost:8000
 - `celery_worker` — worker de tâches asynchrones
@@ -42,6 +52,8 @@ Dans un nouveau terminal :
 ```bash
 docker compose exec backend python manage.py migrate
 docker compose exec backend python manage.py createsuperuser
+# (optionnel) données de démo avec cycle métier complet :
+docker compose exec backend python manage.py seed_demo_data
 ```
 
 ### 5. Accéder à l'application
@@ -63,12 +75,17 @@ de `TenantBaseModel`, ce qui empêche toute fuite de données entre coopérative
 
 ## Structure du projet
 
-Voir `docs/architecture/` pour le détail de l'architecture multi-tenant,
-la stratégie d'isolation des données, et les conventions de code.
-
-Chaque app Django dans `backend/apps/` correspond à un module métier
-(voir la Roadmap du projet). Le frontend suit la même organisation dans
-`frontend/src/features/`.
+```
+backend/
+  apps/            # modules métier Django (auth, members, catalog, stock, ...)
+  config/          # settings (base/dev/prod/test), urls, wsgi/asgi, celery
+frontend/
+  src/features/    # mêmes modules côté React (feature folders)
+  src/shared/      # layout, UI, i18n, routing, api
+infra/             # docker-compose, nginx, .env
+.github/workflows/ # CI backend (ruff/mypy/pytest) et frontend (eslint/tsc/vitest)
+docs/              # documentation du projet
+```
 
 ## Conventions
 
@@ -85,4 +102,10 @@ Chaque app Django dans `backend/apps/` correspond à un module métier
 - [x] Epic 1 — Authentification & Sécurité
 - [x] Epic 2 — Gestion des coopératives
 - [x] Epic 3 — Utilisateurs, Rôles, Permissions
+- [x] Epics 4+ — Modules métier (membres, partenaires, catalogue, entrepôts,
+      stock, achats, ventes, facturation, tableau de bord, reporting, audit,
+      comptabilité PCM)
 
+Le socle fonctionnel est en place et testé ; le passage en production et le
+lancement commercial nécessitent encore des évolutions — voir
+[docs/go-to-market.md](docs/go-to-market.md).

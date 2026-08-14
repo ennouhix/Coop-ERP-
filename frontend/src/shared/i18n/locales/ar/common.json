@@ -87,6 +87,12 @@
     }
   },
   "nav": {
+    "section": {
+      "pilotage": "القيادة",
+      "commerce": "النشاط التجاري",
+      "administration": "الإدارة",
+      "config": "الإعدادات"
+    },
     "dashboard": "لوحة القيادة",
     "members": "الأعضاء",
     "partners": "الزبائن والموردون",
@@ -100,13 +106,43 @@
     "settings": "الإعدادات",
     "coming_soon": "قريباً",
     "toggle_language": "تغيير اللغة",
-    "team": "الفريق"
+    "team": "الفريق",
+    "accounting": "المحاسبة",
+    "roles_permissions": "الأدوار والصلاحيات",
+    "documents": "المستندات"
   },
   "roles": {
     "owner": "مالك",
     "admin": "مدير",
     "staff": "موظف",
     "accountant": "محاسب"
+  },
+  "rolesPermissions": {
+    "title": "الأدوار والصلاحيات",
+    "subtitle": "امنح كل دور إمكانية الوصول إلى الوحدات التجارية للتعاونية. المالك لديه دائماً حق الوصول إلى كل شيء.",
+    "reset": "إعادة التعيين",
+    "access_denied": "هذه الصفحة مخصصة للمالكين والمسؤولين فقط.",
+    "error_load": "تعذر تحميل الصلاحيات.",
+    "error_save": "تعذر حفظ الصلاحيات. يرجى المحاولة مرة أخرى.",
+    "field": {
+      "module": "الوحدة"
+    },
+    "modules": {
+      "users": "المستخدمون والدعوات",
+      "cooperative": "إعدادات التعاونية",
+      "members": "الأعضاء",
+      "partners": "الزبائن والموردون",
+      "catalog": "الكتالوج",
+      "warehouses": "المستودعات",
+      "stock": "المخزون",
+      "purchases": "المشتريات",
+      "sales": "المبيعات",
+      "billing": "الفوترة",
+      "reports": "التقارير",
+      "audit": "سجل التدقيق",
+      "accounting": "المحاسبة والخزينة",
+      "documents": "المستندات التجارية"
+    }
   },
   "dashboard": {
     "period": "الفترة من {{from}} إلى {{to}}",
@@ -270,7 +306,9 @@
       "total": "المجموع",
       "status": "الحالة",
       "notes": "ملاحظات"
-    }
+    },
+    "download_purchase_order": "أمر الشراء (PDF)",
+    "download_receipt": "إشعار الاستلام (PDF)"
   },
   "sales": {
     "title": "المبيعات",
@@ -308,7 +346,8 @@
       "total": "المجموع",
       "status": "الحالة",
       "notes": "ملاحظات"
-    }
+    },
+    "download_delivery_note": "مذكرة التسليم (PDF)"
   },
   "billing": {
     "title": "الفوترة",
@@ -423,5 +462,16 @@
     "date_to": "تاريخ النهاية",
     "download_button": "تحميل (.xlsx)",
     "error_export_failed": "فشل تحميل التقرير. يرجى المحاولة مرة أخرى."
+  },
+  "documents": {
+    "templates_title": "قوالب المستندات",
+    "templates_subtitle": "خصص مذكرات التسليم وأوامر الشراء وإشعارات الاستلام: الشعار والألوان والترويسة والتذييل والشروط العامة.",
+    "field": {
+      "header_text": "نص الترويسة",
+      "footer_text": "نص التذييل",
+      "terms_text": "الشروط / الملاحظات",
+      "accent_color": "اللون المميز",
+      "show_logo": "عرض الشعار"
+    }
   }
 }

@@ -66,7 +66,7 @@ export function ReferenceDataPage() {
         <section>
           <h2 className="font-display text-lg font-bold text-ink-900">{t("catalog.units_title")}</h2>
 
-          <form onSubmit={handleAddUnit} className="mt-3 space-y-3 rounded-lg border border-ink-900/5 bg-white p-4 shadow-sm">
+          <form onSubmit={handleAddUnit} className="mt-3 space-y-3 card p-4">
             <div className="grid grid-cols-3 gap-2">
               <TextField
                 id="unit_name" label={t("catalog.field.unit_name")} required
@@ -93,7 +93,7 @@ export function ReferenceDataPage() {
             </Button>
           </form>
 
-          <ul className="mt-3 divide-y divide-ink-900/5 rounded-lg border border-ink-900/5 bg-white shadow-sm">
+          <ul className="mt-3 divide-y divide-ink-900/5 card">
             {units.map((unit) => (
               <li key={unit.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
                 <span className="font-medium text-ink-900">{unit.name}</span>
@@ -108,7 +108,7 @@ export function ReferenceDataPage() {
         <section>
           <h2 className="font-display text-lg font-bold text-ink-900">{t("catalog.categories_title")}</h2>
 
-          <form onSubmit={handleAddCategory} className="mt-3 space-y-3 rounded-lg border border-ink-900/5 bg-white p-4 shadow-sm">
+          <form onSubmit={handleAddCategory} className="mt-3 space-y-3 card p-4">
             <TranslatedTextField
               label={t("catalog.field.category_name")} required
               value={categoryForm.name} onChange={(v) => setCategoryForm((p) => ({ ...p, name: v }))}
@@ -129,7 +129,7 @@ export function ReferenceDataPage() {
             </Button>
           </form>
 
-          <ul className="mt-3 divide-y divide-ink-900/5 rounded-lg border border-ink-900/5 bg-white shadow-sm">
+          <ul className="mt-3 divide-y divide-ink-900/5 card">
             {categories.map((category) => (
               <li key={category.id} className="px-4 py-2.5 text-sm font-medium text-ink-900">
                 {category.parent && <span className="text-ink-700/50">↳ </span>}

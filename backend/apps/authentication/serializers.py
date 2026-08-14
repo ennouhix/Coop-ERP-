@@ -10,6 +10,8 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from apps.authentication.models import UserRole
+
 User = get_user_model()
 
 
@@ -42,9 +44,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    """Représentation du profil utilisateur exposée par /me et dans la réponse de login."""
+    """
+    Représentation du profil utilisateur exposée par /me et dans la réponse de login.
+    `modules` = modules métier effectivement accessibles à l'utilisateur (matrice
+    RBAC + surcharges de sa coopérative), utilisés par le frontend pour afficher
+    ou masquer les entrées du sidebar.
+    """
 
     cooperative_id = serializers.UUIDField(read_only=True)
+    modules = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -58,8 +66,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "cooperative_id",
             "is_active",
             "date_joined",
+            "modules",
         ]
-        read_only_fields = ["id", "role", "cooperative_id", "is_active", "date_joined"]
+        read_only_fields = ["id", "role", "cooperative_id", "is_active", "date_joined", "modules"]
+
+    def get_modules(self, obj: User) -> list[str]:
+        if obj.role == UserRole.OWNER:
+            from apps.roles_permissions.matrix import MODULES
+
+            return list(MODULES)
+        if not obj.cooperative_id:
+            return []
+        from apps.roles_permissions.services import effective_modules_for_role
+
+        return sorted(
+            effective_modules_for_role(cooperative_id=obj.cooperative_id, role=obj.role)
+        )
 
 
 class ChangePasswordSerializer(serializers.Serializer):

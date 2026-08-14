@@ -1,4 +1,4 @@
-import { ArrowLeft, Truck } from "lucide-react";
+import { ArrowLeft, FileDown, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
@@ -6,6 +6,7 @@ import { Link, useParams } from "react-router-dom";
 import { extractApiErrorMessage } from "../../shared/api/errors";
 import { Button } from "../../shared/ui/Button";
 import { OrderStatusBadge } from "../../shared/ui/OrderStatusBadge";
+import { downloadDeliveryNote } from "../documents/api";
 import { cancelSalesOrder, confirmSalesOrder, deliverSalesOrder, getSalesOrder } from "./api";
 import type { SalesOrder } from "./types";
 
@@ -23,6 +24,7 @@ export function SalesOrderDetailPage() {
   const [isDelivering, setIsDelivering] = useState(false);
   const [deliveryQuantities, setDeliveryQuantities] = useState<Record<string, string>>({});
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   function load() {
     if (!id) return;
@@ -57,6 +59,19 @@ export function SalesOrderDetailPage() {
       setError(extractApiErrorMessage(err, t("common.error_generic")));
     } finally {
       setIsSubmittingAction(false);
+    }
+  }
+
+  async function handleDownloadDeliveryNote() {
+    if (!order) return;
+    setError(null);
+    setIsDownloadingPdf(true);
+    try {
+      await downloadDeliveryNote(order.id, order.order_number);
+    } catch (err) {
+      setError(extractApiErrorMessage(err, t("common.error_generic")));
+    } finally {
+      setIsDownloadingPdf(false);
     }
   }
 
@@ -102,6 +117,7 @@ export function SalesOrderDetailPage() {
   const canConfirm = order.status === "draft";
   const canCancel = order.status === "draft" || order.status === "confirmed";
   const canDeliver = order.status === "confirmed" || order.status === "partially_delivered";
+  const canDownloadDeliveryNote = order.status !== "draft" && order.status !== "cancelled";
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -113,7 +129,7 @@ export function SalesOrderDetailPage() {
       <div className="mt-3 flex items-center justify-between">
         <div>
           <p className="font-mono text-xs text-ink-700/70">{order.order_number}</p>
-          <h1 className="font-display text-2xl font-bold text-ink-900">{order.customer_name}</h1>
+          <h1 className="page-title">{order.customer_name}</h1>
         </div>
         <div className="flex items-center gap-2">
           <OrderStatusBadge status={order.status} i18nPrefix="sales" />
@@ -133,6 +149,12 @@ export function SalesOrderDetailPage() {
               {t("sales.deliver_order")}
             </Button>
           )}
+          {canDownloadDeliveryNote && (
+            <Button variant="secondary" onClick={handleDownloadDeliveryNote} disabled={isDownloadingPdf}>
+              <FileDown className="h-4 w-4" />
+              {t("sales.download_delivery_note")}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -144,9 +166,9 @@ export function SalesOrderDetailPage() {
         <div><span className="text-ink-700/70">{t("sales.total")} : </span><span className="font-semibold text-ink-900">{formatMoney(order.total_amount)}</span></div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-ink-900/5 bg-white shadow-sm">
+      <div className="mt-6 card">
         <table className="w-full text-start text-sm">
-          <thead className="bg-sand-100 text-xs font-medium uppercase tracking-wide text-ink-700/70">
+          <thead className="bg-sand-100 font-mono text-[11px] font-medium uppercase tracking-widest text-ink-600">
             <tr>
               <th className="px-4 py-3 text-start">{t("sales.field.product")}</th>
               <th className="px-4 py-3 text-start">{t("sales.field.quantity")}</th>

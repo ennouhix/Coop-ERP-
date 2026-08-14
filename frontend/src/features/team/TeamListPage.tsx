@@ -78,8 +78,8 @@ export function TeamListPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink-900">{t("team.title")}</h1>
-          <p className="mt-1 text-sm text-ink-700">{t("team.count", { count: members.length })}</p>
+          <h1 className="page-title">{t("team.title")}</h1>
+          <p className="page-heading-subtitle">{t("team.count", { count: members.length })}</p>
         </div>
         {canManage && (
           <Button onClick={() => setShowInviteModal(true)}>
@@ -89,9 +89,9 @@ export function TeamListPage() {
         )}
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-ink-900/5 bg-white shadow-sm">
+      <div className="mt-6 card">
         <table className="w-full text-start text-sm">
-          <thead className="bg-sand-100 text-xs font-medium uppercase tracking-wide text-ink-700/70">
+          <thead className="bg-sand-100 font-mono text-[11px] font-medium uppercase tracking-widest text-ink-600">
             <tr>
               <th className="px-4 py-3 text-start">{t("team.field.name")}</th>
               <th className="px-4 py-3 text-start">{t("team.field.email")}</th>
@@ -125,7 +125,7 @@ export function TeamListPage() {
                           value={member.role}
                           disabled={busyId === member.id}
                           onChange={(e) => handleRoleChange(member.id, e.target.value as UserRole)}
-                          className="rounded-md border border-ink-900/15 px-2 py-1 text-sm focus:border-moss-500 focus:outline-none focus:ring-2 focus:ring-moss-500/20"
+                          className="input-inline px-2 py-1"
                         >
                           {ROLE_OPTIONS.map((r) => (
                             <option key={r} value={r}>
@@ -167,9 +167,9 @@ export function TeamListPage() {
       {canManage && invitations.length > 0 && (
         <div className="mt-8">
           <h2 className="font-display text-lg font-bold text-ink-900">{t("team.pending_invitations")}</h2>
-          <div className="mt-3 overflow-hidden rounded-lg border border-ink-900/5 bg-white shadow-sm">
+          <div className="mt-3 card">
             <table className="w-full text-start text-sm">
-              <thead className="bg-sand-100 text-xs font-medium uppercase tracking-wide text-ink-700/70">
+              <thead className="bg-sand-100 font-mono text-[11px] font-medium uppercase tracking-widest text-ink-600">
                 <tr>
                   <th className="px-4 py-3 text-start">{t("team.field.email")}</th>
                   <th className="px-4 py-3 text-start">{t("team.field.role")}</th>

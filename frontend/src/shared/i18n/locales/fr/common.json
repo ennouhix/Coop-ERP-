@@ -87,6 +87,12 @@
     }
   },
   "nav": {
+    "section": {
+      "pilotage": "Pilotage",
+      "commerce": "Activité",
+      "administration": "Administration",
+      "config": "Paramètres"
+    },
     "dashboard": "Tableau de bord",
     "members": "Membres",
     "partners": "Clients & Fournisseurs",
@@ -100,13 +106,43 @@
     "settings": "Paramètres",
     "coming_soon": "Bientôt",
     "toggle_language": "Changer de langue",
-    "team": "Équipe"
+    "team": "Équipe",
+    "accounting": "Comptabilité",
+    "roles_permissions": "Rôles & Permissions",
+    "documents": "Documents"
   },
   "roles": {
     "owner": "Propriétaire",
     "admin": "Administrateur",
     "staff": "Employé",
     "accountant": "Comptable"
+  },
+  "rolesPermissions": {
+    "title": "Rôles & Permissions",
+    "subtitle": "Donnez à chaque rôle l'accès aux modules métier de votre coopérative. Le propriétaire a toujours accès à tout.",
+    "reset": "Réinitialiser",
+    "access_denied": "Cette page est réservée aux propriétaires et administrateurs.",
+    "error_load": "Impossible de charger les permissions.",
+    "error_save": "Impossible d'enregistrer les permissions. Veuillez réessayer.",
+    "field": {
+      "module": "Module"
+    },
+    "modules": {
+      "users": "Utilisateurs & Invitations",
+      "cooperative": "Paramètres de la coopérative",
+      "members": "Membres",
+      "partners": "Clients & Fournisseurs",
+      "catalog": "Catalogue",
+      "warehouses": "Entrepôts",
+      "stock": "Stock",
+      "purchases": "Achats",
+      "sales": "Ventes",
+      "billing": "Facturation",
+      "reports": "Rapports",
+      "audit": "Journal d'audit",
+      "accounting": "Comptabilité & Trésorerie",
+      "documents": "Documents commerciaux"
+    }
   },
   "dashboard": {
     "period": "Période du {{from}} au {{to}}",
@@ -270,7 +306,9 @@
       "total": "Total",
       "status": "Statut",
       "notes": "Notes"
-    }
+    },
+    "download_purchase_order": "Bon de commande (PDF)",
+    "download_receipt": "Bon de réception (PDF)"
   },
   "sales": {
     "title": "Ventes",
@@ -308,7 +346,8 @@
       "total": "Total",
       "status": "Statut",
       "notes": "Notes"
-    }
+    },
+    "download_delivery_note": "Bon de livraison (PDF)"
   },
   "billing": {
     "title": "Facturation",
@@ -423,5 +462,16 @@
     "date_to": "Date de fin",
     "download_button": "Télécharger (.xlsx)",
     "error_export_failed": "Échec du téléchargement du rapport. Veuillez réessayer."
+  },
+  "documents": {
+    "templates_title": "Modèles de documents",
+    "templates_subtitle": "Personnalisez vos bons de livraison, bons de commande et bons de réception : logo, couleurs, en-tête, pied de page et conditions générales.",
+    "field": {
+      "header_text": "Texte de l'en-tête",
+      "footer_text": "Texte du pied de page",
+      "terms_text": "Conditions / remarques",
+      "accent_color": "Couleur d'accent",
+      "show_logo": "Afficher le logo"
+    }
   }
 }

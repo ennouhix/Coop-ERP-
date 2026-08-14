@@ -59,9 +59,9 @@ export function AcceptInvitationPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-sand-50 px-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-sm">
-        <h1 className="font-display text-xl font-bold text-ink-900">{t("team.accept_title")}</h1>
-        <p className="mt-1 text-sm text-ink-700">{t("team.accept_subtitle")}</p>
+      <div className="w-full max-w-md card card-pad">
+        <h1 className="page-title">{t("team.accept_title")}</h1>
+        <p className="page-heading-subtitle">{t("team.accept_subtitle")}</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <TextField

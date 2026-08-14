@@ -99,7 +99,7 @@ export function WarehouseDetailPage() {
       <div className="mt-3 flex items-center justify-between">
         <div>
           <p className="font-mono text-xs text-ink-700/70">{warehouse.code}</p>
-          <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-ink-900">
+          <h1 className="page-title flex items-center gap-2">
             {warehouse.is_default && <Star className="h-5 w-5 fill-ochre-500 text-ochre-500" />}
             {warehouse.name}
           </h1>
@@ -129,7 +129,7 @@ export function WarehouseDetailPage() {
         </button>
       )}
 
-      <div className="mt-6 space-y-4 rounded-lg border border-ink-900/5 bg-white p-6 shadow-sm">
+      <div className="mt-6 space-y-4 card card-pad">
         <TextField
           id="name" label={t("warehouses.field.name")}
           value={warehouse.name} onChange={(e) => update("name", e.target.value)}

@@ -89,7 +89,7 @@ export function ProductDetailPage() {
       <div className="mt-3 flex items-center justify-between">
         <div>
           <p className="font-mono text-xs text-ink-700/70">{product.sku}</p>
-          <h1 className="font-display text-2xl font-bold text-ink-900">{product.name_display}</h1>
+          <h1 className="page-title">{product.name_display}</h1>
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge
@@ -102,7 +102,7 @@ export function ProductDetailPage() {
         </div>
       </div>
 
-      <div className="mt-6 space-y-4 rounded-lg border border-ink-900/5 bg-white p-6 shadow-sm">
+      <div className="mt-6 space-y-4 card card-pad">
         <TranslatedTextField
           label={t("catalog.field.name")}
           value={product.name} onChange={(v) => update("name", v)}

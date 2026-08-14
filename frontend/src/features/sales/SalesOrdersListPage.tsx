@@ -28,7 +28,7 @@ export function SalesOrdersListPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold text-ink-900">{t("sales.title")}</h1>
+        <h1 className="page-title">{t("sales.title")}</h1>
         <Link to="/sales/new">
           <Button><Plus className="h-4 w-4" />{t("sales.new")}</Button>
         </Link>
@@ -38,7 +38,7 @@ export function SalesOrdersListPage() {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as SalesOrderStatus | "")}
-          className="rounded-md border border-ink-900/15 px-3 py-2 text-sm focus:border-moss-500 focus:outline-none focus:ring-2 focus:ring-moss-500/20"
+          className="input-inline"
         >
           <option value="">{t("sales.status_all")}</option>
           <option value="draft">{t("sales.status_draft")}</option>
@@ -49,9 +49,9 @@ export function SalesOrdersListPage() {
         </select>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-ink-900/5 bg-white shadow-sm">
+      <div className="mt-4 card">
         <table className="w-full text-start text-sm">
-          <thead className="bg-sand-100 text-xs font-medium uppercase tracking-wide text-ink-700/70">
+          <thead className="bg-sand-100 font-mono text-[11px] font-medium uppercase tracking-widest text-ink-600">
             <tr>
               <th className="px-4 py-3 text-start">{t("sales.field.order_number")}</th>
               <th className="px-4 py-3 text-start">{t("sales.field.customer")}</th>

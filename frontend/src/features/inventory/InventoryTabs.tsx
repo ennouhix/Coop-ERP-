@@ -6,7 +6,7 @@ export function InventoryTabs() {
   const tabClass = ({ isActive }: { isActive: boolean }) =>
     [
       "border-b-2 px-1 pb-3 text-sm font-medium transition",
-      isActive ? "border-moss-600 text-moss-700" : "border-transparent text-ink-700 hover:text-ink-900",
+      isActive ? "border-ochre-500 text-moss-800" : "border-transparent text-ink-700 hover:text-ink-900",
     ].join(" ");
 
   return (

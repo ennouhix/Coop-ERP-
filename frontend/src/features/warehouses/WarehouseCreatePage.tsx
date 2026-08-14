@@ -40,9 +40,9 @@ export function WarehouseCreatePage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="font-display text-2xl font-bold text-ink-900">{t("warehouses.new")}</h1>
+      <h1 className="page-title">{t("warehouses.new")}</h1>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-ink-900/5 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4 card card-pad">
         <TextField
           id="name" label={t("warehouses.field.name")} required
           value={values.name} onChange={(e) => update("name", e.target.value)}

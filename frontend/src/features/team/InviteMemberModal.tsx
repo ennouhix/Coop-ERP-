@@ -37,8 +37,8 @@ export function InviteMemberModal({ onClose, onCreated }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 px-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md card card-pad shadow-lift">
         <h2 className="font-display text-lg font-bold text-ink-900">{t("team.invite_title")}</h2>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <TextField

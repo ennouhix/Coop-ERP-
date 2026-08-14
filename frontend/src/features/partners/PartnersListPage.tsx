@@ -50,8 +50,8 @@ export function PartnersListPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink-900">{t("partners.title")}</h1>
-          <p className="mt-1 text-sm text-ink-700">{t("partners.count", { count })}</p>
+          <h1 className="page-title">{t("partners.title")}</h1>
+          <p className="page-heading-subtitle">{t("partners.count", { count })}</p>
         </div>
         <Link to="/partners/new">
           <Button>
@@ -68,13 +68,13 @@ export function PartnersListPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("partners.search_placeholder")}
-            className="w-full rounded-md border border-ink-900/15 py-2 ps-9 pe-3 text-sm focus:border-moss-500 focus:outline-none focus:ring-2 focus:ring-moss-500/20"
+            className="w-full input-search"
           />
         </div>
         <select
           value={role}
           onChange={(e) => setRole(e.target.value as RoleFilter)}
-          className="rounded-md border border-ink-900/15 px-3 py-2 text-sm focus:border-moss-500 focus:outline-none focus:ring-2 focus:ring-moss-500/20"
+          className="input-inline"
         >
           <option value="">{t("partners.role_all")}</option>
           <option value="customer">{t("partners.role_customer")}</option>
@@ -83,7 +83,7 @@ export function PartnersListPage() {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as PartnerStatus | "")}
-          className="rounded-md border border-ink-900/15 px-3 py-2 text-sm focus:border-moss-500 focus:outline-none focus:ring-2 focus:ring-moss-500/20"
+          className="input-inline"
         >
           <option value="">{t("partners.status_all")}</option>
           <option value="active">{t("partners.status_active")}</option>
@@ -91,9 +91,9 @@ export function PartnersListPage() {
         </select>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-ink-900/5 bg-white shadow-sm">
+      <div className="mt-4 card">
         <table className="w-full text-start text-sm">
-          <thead className="bg-sand-100 text-xs font-medium uppercase tracking-wide text-ink-700/70">
+          <thead className="bg-sand-100 font-mono text-[11px] font-medium uppercase tracking-widest text-ink-600">
             <tr>
               <th className="px-4 py-3 text-start">{t("partners.field.code")}</th>
               <th className="px-4 py-3 text-start">{t("partners.field.name")}</th>

@@ -22,28 +22,28 @@ export function TranslatedTextField({ label, value, onChange, multiline = false,
 
   return (
     <div>
-      <span className="mb-1 block text-start text-sm font-medium text-ink-800">
+      <span className="field-label">
         {label} {required && <span className="text-terracotta-600">*</span>}
       </span>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="mb-0.5 block text-start text-xs text-ink-700/70">{t("catalog.lang_fr")}</label>
+          <label className="mb-1 block text-start text-xs text-ink-600">{t("catalog.lang_fr")}</label>
           <Tag
             required={required}
             rows={multiline ? 2 : undefined}
             value={value.fr}
             onChange={(e) => onChange({ ...value, fr: e.target.value })}
-            className="w-full rounded-md border border-ink-900/15 px-3 py-2 text-start text-sm focus:border-moss-500 focus:outline-none focus:ring-2 focus:ring-moss-500/20"
+            className="input"
           />
         </div>
         <div>
-          <label className="mb-0.5 block text-start text-xs text-ink-700/70">{t("catalog.lang_ar")}</label>
+          <label className="mb-1 block text-start text-xs text-ink-600">{t("catalog.lang_ar")}</label>
           <Tag
             rows={multiline ? 2 : undefined}
             dir="rtl"
             value={value.ar ?? ""}
             onChange={(e) => onChange({ ...value, ar: e.target.value })}
-            className="w-full rounded-md border border-ink-900/15 px-3 py-2 text-end font-sans text-sm focus:border-moss-500 focus:outline-none focus:ring-2 focus:ring-moss-500/20"
+            className="input text-end font-sans"
           />
         </div>
       </div>

@@ -98,7 +98,7 @@ export function InvoiceCreatePage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="font-display text-2xl font-bold text-ink-900">{t("billing.new")}</h1>
+      <h1 className="page-title">{t("billing.new")}</h1>
 
       <div className="mt-4 flex gap-2">
         <button
@@ -116,7 +116,7 @@ export function InvoiceCreatePage() {
       </div>
 
       {mode === "from_order" ? (
-        <form onSubmit={handleSubmitFromOrder} className="mt-6 space-y-4 rounded-lg border border-ink-900/5 bg-white p-6 shadow-sm">
+        <form onSubmit={handleSubmitFromOrder} className="mt-6 space-y-4 card card-pad">
           <SelectField
             id="order_id" label={t("billing.field.sales_order")} required
             value={selectedOrderId} onChange={(e) => setSelectedOrderId(e.target.value)}
@@ -142,7 +142,7 @@ export function InvoiceCreatePage() {
           </div>
         </form>
       ) : (
-        <form onSubmit={handleSubmitManual} className="mt-6 space-y-4 rounded-lg border border-ink-900/5 bg-white p-6 shadow-sm">
+        <form onSubmit={handleSubmitManual} className="mt-6 space-y-4 card card-pad">
           <SelectField
             id="customer_id" label={t("billing.field.customer")} required
             value={manualValues.customer_id} onChange={(e) => setManualValues((p) => ({ ...p, customer_id: e.target.value }))}

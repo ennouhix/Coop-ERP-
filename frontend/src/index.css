@@ -13,8 +13,167 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply font-sans text-ink-900 antialiased;
+@layer base {
+  body {
+    @apply bg-sand-50 font-sans text-ink-900 antialiased;
+  }
+
+  ::selection {
+    @apply bg-ochre-200/70 text-ink-950;
+  }
+
+  /* Barre de défilement discrète, teinte argile. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(36 34 29 / 0.18) transparent;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ochre-400/60 focus-visible:ring-offset-1 focus-visible:ring-offset-sand-50;
+  }
+}
+
+@layer components {
+  /* Papier quadrillé très léger pour la zone de travail. */
+  .app-main {
+    background-color: #faf7f1;
+    background-image: radial-gradient(rgb(36 34 29 / 0.045) 0.75px, transparent 0.75px);
+    background-size: 22px 22px;
+  }
+
+  /* --- Titre de page « atelier » --------------------------------------- */
+  .page-heading {
+    @apply flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between;
+  }
+
+  .page-heading-title {
+    @apply flex items-center gap-3;
+  }
+
+  .page-heading-rule {
+    @apply h-9 w-1 rounded-full bg-ochre-500;
+  }
+
+  .page-heading h1 {
+    @apply font-display text-2xl font-extrabold leading-tight tracking-tight text-ink-900;
+  }
+
+  .page-heading-subtitle {
+    @apply mt-1 text-sm text-ink-600;
+  }
+
+  /* Titre de page avec filet ocre (utilisé hors composant PageHeader). */
+  .page-title {
+    @apply font-display text-2xl font-extrabold tracking-tight text-ink-900;
+    position: relative;
+    padding-bottom: 0.5rem;
+  }
+
+  .page-title::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    bottom: 0;
+    width: 2.25rem;
+    height: 2px;
+    border-radius: 9999px;
+    background-color: rgb(192 138 62 / 0.75);
+  }
+
+  /* --- Panneau (carte « dossier ») -------------------------------------- */
+  .card {
+    @apply overflow-hidden rounded-lg border border-ink-900/10 bg-white shadow-card;
+  }
+
+  .card-pad {
+    @apply p-6;
+  }
+
+  .card-header {
+    @apply flex items-center justify-between gap-3 border-b border-ink-900/10 bg-sand-50/70 px-5 py-3.5;
+  }
+
+  .card-header h2,
+  .card-header h3 {
+    @apply flex items-center gap-2 font-display text-sm font-bold tracking-tight text-ink-900;
+  }
+
+  /* Pastille d'accent du bandeau. */
+  .card-header-dot {
+    @apply inline-block h-2 w-2 rounded-full bg-ochre-400;
+  }
+
+  .card-section {
+    @apply border-t border-ink-900/10 px-5 py-4;
+  }
+
+  /* --- Étiquette de champ ------------------------------------------------- */
+  .field-label {
+    @apply mb-1.5 block text-start text-sm font-semibold text-ink-800;
+  }
+
+  .field-hint {
+    @apply mt-1 text-start text-xs text-ink-600;
+  }
+
+  .field-error {
+    @apply mt-1.5 text-start text-xs font-medium text-terracotta-600;
+  }
+
+  /* --- Champ de saisie ----------------------------------------------------- */
+  .input {
+    @apply w-full rounded-md border border-ink-900/20 bg-white px-3 py-2 text-start text-sm text-ink-900 shadow-inner transition placeholder:text-ink-400 focus:border-moss-600 focus:ring-2 focus:ring-moss-600/15;
+  }
+
+  .input-search {
+    @apply rounded-md border border-ink-900/15 bg-white py-2 ps-9 pe-3 text-sm shadow-card transition placeholder:text-ink-400 focus:border-moss-600 focus:ring-2 focus:ring-moss-600/15;
+  }
+
+  .input-inline {
+    @apply rounded-md border border-ink-900/20 bg-white px-3 py-2 text-start text-sm text-ink-900 shadow-inner transition focus:border-moss-600 focus:ring-2 focus:ring-moss-600/15;
+  }
+
+  /* --- Tableau de données --------------------------------------------------- */
+  .data-table {
+    @apply w-full text-start text-sm;
+  }
+
+  .tbl-th {
+    @apply border-b border-ink-900/10 bg-sand-100 px-4 py-3 text-start font-mono text-[11px] font-medium uppercase tracking-widest text-ink-600;
+  }
+
+  .tbl-td {
+    @apply px-4 py-3 align-middle text-ink-800;
+  }
+
+  .tbl-row {
+    @apply transition-colors hover:bg-sand-50;
+  }
+
+  /* --- Alertes (encadrés de statut) ------------------------------------------ */
+  .alert {
+    @apply flex items-start gap-3 rounded-md border px-4 py-3 text-sm;
+  }
+
+  .alert-error {
+    @apply border-terracotta-200 bg-terracotta-50 text-terracotta-700;
+  }
+
+  .alert-warn {
+    @apply border-ochre-200 bg-ochre-50 text-ochre-800;
+  }
+
+  .alert-info {
+    @apply border-indigo-200 bg-indigo-50 text-indigo-700;
+  }
+
+  .alert-success {
+    @apply border-sage-200 bg-sage-50 text-sage-700;
+  }
 }
 
 /* Respecte la préférence système de réduction de mouvement. */

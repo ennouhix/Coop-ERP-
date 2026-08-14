@@ -7,6 +7,7 @@ import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate } from "react-router-dom";
 
+import { Logo } from "../../shared/ui/Logo";
 import { ZelligePattern } from "../../shared/ui/ZelligePattern";
 import { useAuthStore } from "./authStore";
 
@@ -35,50 +36,59 @@ export function LoginPage() {
 
       <div className="relative w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-ochre-500 font-display text-lg font-extrabold text-indigo-950">
-            C
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-ochre-500 text-indigo-950 shadow-lift">
+            <Logo className="h-6 w-6" />
           </div>
-          <h1 className="font-display text-xl font-bold text-white">{t("app.name")}</h1>
+          <h1 className="font-display text-2xl font-extrabold tracking-tight text-white">{t("app.name")}</h1>
+          <p className="mt-1 font-mono text-[11px] uppercase tracking-eyebrow text-ochre-400/80">
+            ERP · coopératives marocaines
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="rounded-lg bg-white p-8 shadow-xl">
-          <label className="mb-1 block text-start text-sm font-medium text-ink-800">
-            {t("auth.email")}
-          </label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mb-4 w-full rounded-md border border-ink-900/15 px-3 py-2 text-start text-sm focus:border-moss-500 focus:outline-none focus:ring-2 focus:ring-moss-500/20"
-            autoComplete="email"
-          />
+        <form onSubmit={handleSubmit} className="overflow-hidden rounded-lg border border-white/10 bg-white shadow-lift">
+          <div className="h-1.5 bg-gradient-to-r from-moss-600 via-ochre-500 to-terracotta-500" aria-hidden="true" />
 
-          <label className="mb-1 block text-start text-sm font-medium text-ink-800">
-            {t("auth.password")}
-          </label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mb-4 w-full rounded-md border border-ink-900/15 px-3 py-2 text-start text-sm focus:border-moss-500 focus:outline-none focus:ring-2 focus:ring-moss-500/20"
-            autoComplete="current-password"
-          />
+          <div className="p-8">
+            <label className="field-label" htmlFor="email">
+              {t("auth.email")}
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input mb-4"
+              autoComplete="email"
+            />
 
-          {error && (
-            <p role="alert" className="mb-4 text-start text-sm text-terracotta-600">
-              {error}
-            </p>
-          )}
+            <label className="field-label" htmlFor="password">
+              {t("auth.password")}
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input mb-4"
+              autoComplete="current-password"
+            />
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full rounded-md bg-moss-600 py-2.5 text-sm font-semibold text-white transition hover:bg-moss-700 focus:outline-none focus:ring-2 focus:ring-moss-500/40 disabled:opacity-50"
-          >
-            {isLoading ? t("common.loading") : t("auth.login")}
-          </button>
+            {error && (
+              <p role="alert" className="mb-4 text-start text-sm text-terracotta-600">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full rounded-md bg-moss-700 py-2.5 text-sm font-semibold text-white transition hover:bg-moss-800 focus:outline-none focus:ring-2 focus:ring-moss-600/40 disabled:opacity-50"
+            >
+              {isLoading ? t("common.loading") : t("auth.login")}
+            </button>
+          </div>
         </form>
       </div>
     </div>

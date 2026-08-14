@@ -35,9 +35,9 @@ export function MemberCreatePage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="font-display text-2xl font-bold text-ink-900">{t("members.new")}</h1>
+      <h1 className="page-title">{t("members.new")}</h1>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-ink-900/5 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4 card card-pad">
         <div className="grid grid-cols-2 gap-4">
           <TextField
             id="first_name" label={t("members.field.first_name")} required

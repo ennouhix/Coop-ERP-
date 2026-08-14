@@ -86,7 +86,7 @@ export function MemberDetailPage() {
       <div className="mt-3 flex items-center justify-between">
         <div>
           <p className="font-mono text-xs text-ink-700/70">{member.member_number}</p>
-          <h1 className="font-display text-2xl font-bold text-ink-900">{member.full_name}</h1>
+          <h1 className="page-title">{member.full_name}</h1>
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge label={t(`members.status_${member.status}`)} tone={STATUS_TONE[member.status]} />
@@ -99,7 +99,7 @@ export function MemberDetailPage() {
         </div>
       </div>
 
-      <div className="mt-6 space-y-4 rounded-lg border border-ink-900/5 bg-white p-6 shadow-sm">
+      <div className="mt-6 space-y-4 card card-pad">
         <div className="grid grid-cols-2 gap-4">
           <TextField
             id="first_name" label={t("members.field.first_name")}

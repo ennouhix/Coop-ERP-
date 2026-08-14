@@ -38,6 +38,16 @@ import { NAV_ITEMS } from "./shared/layout/navConfig";
 import { ProtectedRoute } from "./shared/routing/ProtectedRoute";
 import { ComingSoonPage } from "./shared/ui/ComingSoonPage";
 import { LanguageProvider } from "./shared/i18n/LanguageProvider";
+import { AccountingDashboardPage } from "./features/accounting/AccountingDashboardPage";
+import { ChartOfAccountsPage } from "./features/accounting/ChartOfAccountsPage";
+import { JournalEntriesListPage } from "./features/accounting/JournalEntriesListPage";
+import { JournalEntryCreatePage } from "./features/accounting/JournalEntryCreatePage";
+import { JournalEntryDetailPage } from "./features/accounting/JournalEntryDetailPage";
+import { GeneralLedgerPage } from "./features/accounting/GeneralLedgerPage";
+import { TrialBalancePage } from "./features/accounting/TrialBalancePage";
+import { FinancialStatementsPage } from "./features/accounting/FinancialStatementsPage";
+import { RolesPermissionsPage } from "./features/roles_permissions/RolesPermissionsPage";
+import { DocumentTemplatesPage } from "./features/documents/DocumentTemplatesPage";
 
 export function App() {
   useTranslation(); // force le montage après l'init i18n
@@ -82,8 +92,18 @@ export function App() {
                   <Route path="/billing" element={<InvoicesListPage />} />
                   <Route path="/billing/new" element={<InvoiceCreatePage />} />
                   <Route path="/billing/:id" element={<InvoiceDetailPage />} />
+                  <Route path="/documents" element={<DocumentTemplatesPage />} />
                   <Route path="/reports" element={<ReportsPage />} />
                   <Route path="/team" element={<TeamListPage />} />
+                  <Route path="/roles" element={<RolesPermissionsPage />} />
+                  <Route path="/accounting" element={<AccountingDashboardPage />} />
+                  <Route path="/accounting/accounts" element={<ChartOfAccountsPage />} />
+                  <Route path="/accounting/entries" element={<JournalEntriesListPage />} />
+                  <Route path="/accounting/entries/new" element={<JournalEntryCreatePage />} />
+                  <Route path="/accounting/entries/:id" element={<JournalEntryDetailPage />} />
+                  <Route path="/accounting/ledger" element={<GeneralLedgerPage />} />
+                  <Route path="/accounting/trial-balance" element={<TrialBalancePage />} />
+                  <Route path="/accounting/statements" element={<FinancialStatementsPage />} />
                   <Route path="/settings" element={<CooperativeSettingsPage />} />
                   {NAV_ITEMS.filter((item) => item.comingSoon).map((item) => (
                     <Route

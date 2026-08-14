@@ -148,9 +148,9 @@ export function InvoiceDetailPage() {
       </div>
 
       {/* Carte principale */}
-      <div className="overflow-hidden rounded-xl border border-ink-200/50 bg-white shadow-sm">
+      <div className="card">
         {/* En-tête de la facture */}
-        <div className="border-b border-ink-200/50 bg-gradient-to-r from-sand-50 to-white px-6 py-4">
+        <div className="border-b border-ink-200/50 bg-sand-50 px-6 py-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-3">
@@ -163,7 +163,7 @@ export function InvoiceDetailPage() {
                   <OrderStatusBadge status={invoice.status} i18nPrefix="billing" />
                 )}
               </div>
-              <h1 className="text-2xl font-semibold text-ink-900">{invoice.customer_name}</h1>
+              <h1 className="page-title">{invoice.customer_name}</h1>
             </div>
             
             <div className="flex flex-wrap items-center gap-2">
@@ -190,7 +190,7 @@ export function InvoiceDetailPage() {
         {/* Informations de la facture */}
         <div className="grid grid-cols-2 gap-6 border-b border-ink-200/50 px-6 py-4 md:grid-cols-4">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-ink-500">
+            <p className="font-mono text-[11px] font-medium uppercase tracking-eyebrow text-ink-600">
               {t("billing.field.issue_date")}
             </p>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-900">
@@ -199,7 +199,7 @@ export function InvoiceDetailPage() {
             </p>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-ink-500">
+            <p className="font-mono text-[11px] font-medium uppercase tracking-eyebrow text-ink-600">
               {t("billing.field.due_date")}
             </p>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-900">
@@ -208,7 +208,7 @@ export function InvoiceDetailPage() {
             </p>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-ink-500">
+            <p className="font-mono text-[11px] font-medium uppercase tracking-eyebrow text-ink-600">
               {t("billing.field.total")}
             </p>
             <p className="mt-1 text-lg font-semibold text-ink-900">
@@ -216,10 +216,10 @@ export function InvoiceDetailPage() {
             </p>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-ink-500">
+            <p className="font-mono text-[11px] font-medium uppercase tracking-eyebrow text-ink-600">
               {t("billing.field.balance_due")}
             </p>
-            <p className={`mt-1 text-lg font-semibold ${invoice.balance_due === "0" ? "text-emerald-600" : "text-terracotta-600"}`}>
+            <p className={`mt-1 text-lg font-semibold ${invoice.balance_due === "0" ? "text-sage-600" : "text-terracotta-600"}`}>
               {formatMoney(invoice.balance_due)}
             </p>
           </div>
@@ -233,34 +233,34 @@ export function InvoiceDetailPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-ink-200 text-left text-xs font-medium uppercase tracking-wider text-ink-500">
-                  <th className="pb-2 pr-4">{t("billing.field.product")}</th>
-                  <th className="pb-2 pr-4 text-right">{t("billing.field.quantity")}</th>
-                  <th className="pb-2 pr-4 text-right">{t("billing.field.unit_price")}</th>
-                  <th className="pb-2 text-right">{t("billing.field.line_total")}</th>
+                <tr className="border-b border-ink-200 text-start font-mono text-[11px] font-medium uppercase tracking-eyebrow text-ink-600">
+                  <th className="pb-2 pe-4">{t("billing.field.product")}</th>
+                  <th className="pb-2 pe-4 text-end">{t("billing.field.quantity")}</th>
+                  <th className="pb-2 pe-4 text-end">{t("billing.field.unit_price")}</th>
+                  <th className="pb-2 text-end">{t("billing.field.line_total")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink-200/50">
                 {invoice.lines.map((line) => (
                   <tr key={line.id}>
-                    <td className="py-3 pr-4">
+                    <td className="py-3 pe-4">
                       <div className="flex items-start gap-2">
                         <span className="font-mono text-xs text-ink-500">{line.product_sku}</span>
                         <span className="text-ink-900">{line.description}</span>
                       </div>
                     </td>
-                    <td className="py-3 pr-4 text-right text-ink-700">{line.quantity}</td>
-                    <td className="py-3 pr-4 text-right text-ink-700">{formatMoney(line.unit_price)}</td>
-                    <td className="py-3 text-right font-medium text-ink-900">{formatMoney(line.line_total)}</td>
+                    <td className="py-3 pe-4 text-end text-ink-700">{line.quantity}</td>
+                    <td className="py-3 pe-4 text-end text-ink-700">{formatMoney(line.unit_price)}</td>
+                    <td className="py-3 text-end font-medium text-ink-900">{formatMoney(line.line_total)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot className="border-t-2 border-ink-300">
                 <tr>
-                  <td colSpan={3} className="py-2 text-right font-medium text-ink-700">
+                  <td colSpan={3} className="py-2 text-end font-medium text-ink-700">
                     {t("Total   :")}
                   </td>
-                  <td className="py-2 text-right font-semibold text-ink-900">
+                  <td className="py-2 text-end font-semibold text-ink-900">
                     {formatMoney(invoice.total_amount)}
                   </td>
                 </tr>
@@ -272,15 +272,15 @@ export function InvoiceDetailPage() {
 
       {/* Messages d'erreur */}
       {error && (
-        <div className="rounded-lg bg-terracotta-50 px-4 py-3 text-sm text-terracotta-700" role="alert">
+        <div className="alert alert-error" role="alert">
           {error}
         </div>
       )}
 
       {/* Formulaire de paiement */}
       {isPaying && (
-        <div className="overflow-hidden rounded-xl border border-ink-200/50 bg-white shadow-sm">
-          <div className="border-b border-ink-200/50 bg-gradient-to-r from-sand-50 to-white px-6 py-3">
+        <div className="card">
+          <div className="border-b border-ink-200/50 bg-sand-50 px-6 py-3">
             <h2 className="flex items-center gap-2 text-sm font-medium text-ink-800">
               <CreditCard className="h-4 w-4" />
               {t("billing.record_payment")}
@@ -346,8 +346,8 @@ export function InvoiceDetailPage() {
 
       {/* Historique des paiements */}
       {invoice.payments.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-ink-200/50 bg-white shadow-sm">
-          <div className="border-b border-ink-200/50 bg-gradient-to-r from-sand-50 to-white px-6 py-3">
+        <div className="card">
+          <div className="border-b border-ink-200/50 bg-sand-50 px-6 py-3">
             <h2 className="flex items-center gap-2 text-sm font-medium text-ink-800">
               <Hash className="h-4 w-4" />
               {t("billing.payments_title")}
@@ -357,21 +357,21 @@ export function InvoiceDetailPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-ink-200 text-left text-xs font-medium uppercase tracking-wider text-ink-500">
-                    <th className="pb-2 pr-4">{t("billing.field.payment_date")}</th>
-                    <th className="pb-2 pr-4 text-right">{t("billing.field.amount")}</th>
-                    <th className="pb-2 pr-4">{t("billing.field.payment_method")}</th>
+                  <tr className="border-b border-ink-200 text-start font-mono text-[11px] font-medium uppercase tracking-eyebrow text-ink-600">
+                    <th className="pb-2 pe-4">{t("billing.field.payment_date")}</th>
+                    <th className="pb-2 pe-4 text-end">{t("billing.field.amount")}</th>
+                    <th className="pb-2 pe-4">{t("billing.field.payment_method")}</th>
                     <th className="pb-2">{t("billing.field.reference")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-200/50">
                   {invoice.payments.map((payment) => (
                     <tr key={payment.id}>
-                      <td className="py-3 pr-4 text-ink-700">{payment.payment_date}</td>
-                      <td className="py-3 pr-4 text-right font-medium text-ink-900">
+                      <td className="py-3 pe-4 text-ink-700">{payment.payment_date}</td>
+                      <td className="py-3 pe-4 text-end font-medium text-ink-900">
                         {formatMoney(payment.amount)}
                       </td>
-                      <td className="py-3 pr-4 text-ink-700">
+                      <td className="py-3 pe-4 text-ink-700">
                         {t(`billing.method_${payment.payment_method}`)}
                       </td>
                       <td className="py-3 font-mono text-sm text-ink-600">

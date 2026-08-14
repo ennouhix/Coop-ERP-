@@ -49,11 +49,11 @@ export function StockInOutForm({ direction }: { direction: "in" | "out" }) {
 
   return (
     <div className="mx-auto max-w-xl">
-      <h1 className="font-display text-2xl font-bold text-ink-900">
+      <h1 className="page-title">
         {direction === "in" ? t("inventory.action_in") : t("inventory.action_out")}
       </h1>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-ink-900/5 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4 card card-pad">
         <SelectField
           id="product_id" label={t("inventory.field.product")} required
           value={values.product_id} onChange={(e) => update("product_id", e.target.value)}

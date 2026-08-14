@@ -91,10 +91,10 @@ export function CooperativeSettingsPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="font-display text-2xl font-bold text-ink-900">{t("cooperative.title")}</h1>
-      <p className="mt-1 text-sm text-ink-700">{t("cooperative.subtitle")}</p>
+      <h1 className="page-title">{t("cooperative.title")}</h1>
+      <p className="page-heading-subtitle">{t("cooperative.subtitle")}</p>
 
-      <div className="mt-6 flex items-center gap-4 rounded-lg border border-ink-900/5 bg-white p-5 shadow-sm">
+      <div className="mt-6 flex items-center gap-4 card p-5">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-md bg-sand-100">
           {coop.logo ? (
             <img src={getMediaUrl(coop.logo) ?? undefined} alt={coop.name} className="h-full w-full object-cover" />
@@ -136,7 +136,7 @@ export function CooperativeSettingsPage() {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-ink-900/5 bg-white p-5 shadow-sm">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4 card p-5">
         <fieldset disabled={!canEdit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <TextField
