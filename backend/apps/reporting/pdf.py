@@ -15,21 +15,29 @@ que les sections correspondantes apparaissent.
 """
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from io import BytesIO
 
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas as pdf_canvas
 from reportlab.platypus import (
-    Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle, HRFlowable, Image,
+    HRFlowable,
+    Image,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
 )
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_RIGHT, TA_LEFT, TA_CENTER
 
 from apps.billing.models import Invoice
 from apps.core.fields import get_translated_value
+from apps.reporting import data as report_data
 
 # --- Palette (sobre, corporate) --------------------------------------------
 NAVY = colors.HexColor("#122036")
@@ -446,6 +454,94 @@ def generate_invoice_pdf(invoice: Invoice) -> BytesIO:
     footer_lines = [footer_line1]
     if cooperative.address:
         footer_lines.append(cooperative.address)
+
+    doc.build(
+        elements,
+        canvasmaker=lambda *a, **kw: _NumberedCanvas(*a, footer_lines=footer_lines, **kw),
+    )
+    buffer.seek(0)
+    return buffer
+
+def generate_report_pdf(
+    cooperative,
+    title: str,
+    subtitle: str,
+    headers: list,
+    rows: list,
+) -> BytesIO:
+    """Rapport tabulaire générique (membres, stock, ventes, etc.), paginé."""
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        topMargin=14 * mm, bottomMargin=20 * mm, leftMargin=14 * mm, rightMargin=14 * mm,
+    )
+
+    styles = getSampleStyleSheet()
+    style_title = ParagraphStyle(
+        "ReportTitle", parent=styles["Normal"], fontName="Helvetica-Bold",
+        fontSize=15, leading=18, textColor=NAVY,
+    )
+    style_coop = ParagraphStyle(
+        "ReportCoop", parent=styles["Normal"], fontName="Helvetica-Bold",
+        fontSize=9, leading=12, textColor=GREY_TEXT,
+    )
+    style_subtitle = ParagraphStyle(
+        "ReportSubtitle", parent=styles["Normal"], fontSize=8, leading=11, textColor=GREY_TEXT,
+    )
+    style_cell = ParagraphStyle(
+        "ReportCell", parent=styles["Normal"], fontSize=7.8, leading=10.5, textColor=INK,
+    )
+    style_head = ParagraphStyle(
+        "ReportHead", parent=styles["Normal"], fontName="Helvetica-Bold",
+        fontSize=7.8, leading=10, textColor=colors.white,
+    )
+
+    legal_bits = [cooperative.name]
+    if cooperative.ice:
+        legal_bits.append(f"ICE {cooperative.ice}")
+    if cooperative.rc_number:
+        legal_bits.append(f"RC {cooperative.rc_number}")
+    footer_lines = [" · ".join(legal_bits)]
+    if cooperative.address:
+        footer_lines.append(cooperative.address)
+
+    elements = []
+    header_table = Table(
+        [[Paragraph(cooperative.name, style_coop), Paragraph(title, style_title)]],
+        colWidths=[100 * mm, 82 * mm],
+    )
+    header_table.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 1.5 * mm))
+    subtitle_line = "Généré le " + date.today().strftime("%d/%m/%Y")
+    if subtitle:
+        subtitle_line += " · " + subtitle
+    elements.append(Paragraph(subtitle_line, style_subtitle))
+    elements.append(Spacer(1, 2.5 * mm))
+    elements.append(HRFlowable(width="100%", thickness=1, color=NAVY))
+    elements.append(Spacer(1, 5 * mm))
+
+    if not rows:
+        elements.append(Paragraph("Aucune donnée à afficher.", style_cell))
+    else:
+        table_data = [[Paragraph(h, style_head) for h in headers]]
+        table_data += [
+            [Paragraph(report_data.format_report_cell(value), style_cell) for value in row]
+            for row in rows
+        ]
+        report_table = Table(table_data, repeatRows=1)
+        report_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+            ("GRID", (0, 0), (-1, -1), 0.3, BORDER),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT_BG]),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("TOPPADDING", (0, 0), (-1, -1), 3.5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 3.5),
+            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ]))
+        elements.append(report_table)
 
     doc.build(
         elements,
