@@ -16,6 +16,8 @@ export const ROLE_PERMISSION_MODULES = [
   "reports",
   "audit",
   "accounting",
+  "assemblies",
+  "contributions",
 ] as const;
 
 export const EDITABLE_ROLES: EditableUserRole[] = ["admin", "staff", "accountant"];

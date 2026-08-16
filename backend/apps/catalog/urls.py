@@ -22,6 +22,14 @@ urlpatterns = [
     path("categories/<uuid:pk>/", CategoryDetailView.as_view(), name="category-detail"),
     path("products/", ProductListCreateView.as_view(), name="product-list-create"),
     path("products/<uuid:pk>/", ProductDetailView.as_view(), name="product-detail"),
-    path("products/<uuid:product_id>/deactivate/", ProductDeactivateView.as_view(), name="product-deactivate"),
-    path("products/<uuid:product_id>/reactivate/", ProductReactivateView.as_view(), name="product-reactivate"),
+    path(
+        "products/<uuid:product_id>/deactivate/",
+        ProductDeactivateView.as_view(),
+        name="product-deactivate",
+    ),
+    path(
+        "products/<uuid:product_id>/reactivate/",
+        ProductReactivateView.as_view(),
+        name="product-reactivate",
+    ),
 ]

@@ -6,6 +6,7 @@ soumis dans la requête : un attaquant qui change d'IP ne contourne pas la
 protection, mais un utilisateur légitime derrière un NAT partagé (bureau,
 4G) n'est pas pénalisé par les tentatives d'un autre utilisateur.
 """
+
 from __future__ import annotations
 
 from rest_framework.throttling import SimpleRateThrottle

@@ -5,6 +5,7 @@ Endpoints :
 - GET  /api/v1/roles/permissions/  -> accès effectifs par rôle (panneau admin)
 - PUT  /api/v1/roles/permissions/  -> personnaliser les accès d'un/plusieurs rôles
 """
+
 from __future__ import annotations
 
 from rest_framework import status

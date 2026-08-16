@@ -10,15 +10,16 @@ Uniformise le format des erreurs de l'API sur toute la plateforme :
     }
 }
 """
+
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
 
-def custom_exception_handler(exc: Exception, context: dict) -> Optional[Response]:
+def custom_exception_handler(exc: Exception, context: dict) -> Response | None:
     response = exception_handler(exc, context)
 
     if response is not None:

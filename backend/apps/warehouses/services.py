@@ -1,6 +1,7 @@
 """
 Logique métier du module warehouses.
 """
+
 from __future__ import annotations
 
 from django.db import transaction
@@ -59,8 +60,8 @@ def set_default_warehouse(*, warehouse: Warehouse) -> None:
     l'ancien défaut et d'activer le nouveau — évite qu'une requête
     concurrente ne laisse deux entrepôts marqués défaut simultanément.
     """
-    Warehouse.all_objects.select_for_update().filter(cooperative_id=warehouse.cooperative_id).update(
-        is_default=False
-    )
+    Warehouse.all_objects.select_for_update().filter(
+        cooperative_id=warehouse.cooperative_id
+    ).update(is_default=False)
     warehouse.is_default = True
     warehouse.save(update_fields=["is_default"])

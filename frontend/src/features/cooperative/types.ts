@@ -32,3 +32,29 @@ export type CooperativeFormValues = Pick<
   | "region"
   | "default_language"
 >;
+
+export interface CooperativeEmailConfig {
+  id: string;
+  smtp_host: string;
+  smtp_port: number;
+  smtp_username: string;
+  smtp_password: string;
+  smtp_use_tls: boolean;
+  from_name: string;
+  from_email: string;
+  is_configured: boolean;
+}
+
+export interface EmailNotification {
+  id: string;
+  notification_type: string;
+  notification_type_display: string;
+  recipient_email: string;
+  recipient_name: string;
+  subject: string;
+  status: string;
+  status_display: string;
+  error_message: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}

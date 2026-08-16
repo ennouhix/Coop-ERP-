@@ -8,6 +8,7 @@ target_repr suffisent pour un journal consulté par des humains, et
 évitent tout risque d'import circulaire entre apps.audit et les 13 autres
 apps du projet.
 """
+
 from __future__ import annotations
 
 from django.db import models
@@ -26,15 +27,25 @@ class AuditLog(TenantBaseModel):
     """
 
     actor = models.ForeignKey(
-        "authentication.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="audit_logs"
+        "authentication.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
     )
     action = models.CharField(max_length=100, db_index=True)
 
     target_type = models.CharField(max_length=100, blank=True)
     target_id = models.CharField(max_length=64, blank=True)
-    target_repr = models.CharField(max_length=255, blank=True, help_text="Libellé humain, ex: 'FAC-00001'.")
+    target_repr = models.CharField(
+        max_length=255, blank=True, help_text="Libellé humain, ex: 'FAC-00001'."
+    )
 
-    metadata = models.JSONField(default=dict, blank=True, help_text="Détails structurés, ex: {'old_role': 'staff', 'new_role': 'admin'}.")
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Détails structurés, ex: {'old_role': 'staff', 'new_role': 'admin'}.",
+    )
     ip_address = models.GenericIPAddressField(null=True, blank=True)
 
     class Meta:

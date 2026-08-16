@@ -5,6 +5,7 @@ Vérifie non seulement le code HTTP, mais que les fichiers générés sont
 RÉELLEMENT des PDF/XLSX valides et exploitables (pas juste une réponse
 200 avec un contenu vide ou corrompu).
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -36,27 +37,45 @@ class ReportingTestCase(APITestCase):
     def setUp(self) -> None:
         cache.clear()
         self.cooperative = Cooperative.objects.create(
-            name="Coopérative Argane", slug="argane", ice="001234567000012", legal_name="Argane SARL",
+            name="Coopérative Argane",
+            slug="argane",
+            ice="001234567000012",
+            legal_name="Argane SARL",
         )
         self.admin = User.objects.create_user(
-            username="admin", email="admin@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="admin",
+            username="admin",
+            email="admin@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="admin",
         )
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
 
-        self.unit = Unit.objects.create(cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight")
+        self.unit = Unit.objects.create(
+            cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight"
+        )
         self.product = Product.objects.create(
-            cooperative=self.cooperative, sku="PRD-00001", name={"fr": "Huile d'argane"}, unit=self.unit,
+            cooperative=self.cooperative,
+            sku="PRD-00001",
+            name={"fr": "Huile d'argane"},
+            unit=self.unit,
         )
         self.warehouse = Warehouse.objects.create(
             cooperative=self.cooperative, code="WH-0001", name="Entrepôt", is_default=True
         )
         self.customer = Partner.objects.create(
-            cooperative=self.cooperative, code="PART-0001", name="Épicerie Al Baraka",
-            is_customer=True, is_supplier=False, phone_number="0612345678",
+            cooperative=self.cooperative,
+            code="PART-0001",
+            name="Épicerie Al Baraka",
+            is_customer=True,
+            is_supplier=False,
+            phone_number="0612345678",
         )
 
     def _auth(self, user) -> None:  # noqa: ANN001
@@ -65,9 +84,18 @@ class ReportingTestCase(APITestCase):
 
     def _create_issued_invoice(self):
         invoice = billing_services.create_manual_invoice(
-            cooperative=self.cooperative, customer=self.customer,
-            lines=[{"product": self.product, "description": "", "quantity": Decimal("10"), "unit_price": Decimal("50.00")}],
-            actor=self.admin, issue_date=date(2026, 7, 1),
+            cooperative=self.cooperative,
+            customer=self.customer,
+            lines=[
+                {
+                    "product": self.product,
+                    "description": "",
+                    "quantity": Decimal("10"),
+                    "unit_price": Decimal("50.00"),
+                }
+            ],
+            actor=self.admin,
+            issue_date=date(2026, 7, 1),
         )
         billing_services.issue_invoice(invoice=invoice, actor=self.admin)
         return invoice
@@ -96,8 +124,11 @@ class ReportingTestCase(APITestCase):
     def test_cannot_download_invoice_pdf_from_other_cooperative(self) -> None:
         other_coop = Cooperative.objects.create(name="Autre Coop", slug="autre")
         other_admin = User.objects.create_user(
-            username="other", email="other@autre.ma", password="MotDePasseSolide123",
-            cooperative=other_coop, role="admin",
+            username="other",
+            email="other@autre.ma",
+            password="MotDePasseSolide123",
+            cooperative=other_coop,
+            role="admin",
         )
         invoice = self._create_issued_invoice()
         self._auth(other_admin)
@@ -108,14 +139,25 @@ class ReportingTestCase(APITestCase):
     # --- Export membres ---
 
     def test_members_export_contains_correct_rows(self) -> None:
-        create_member(cooperative=self.cooperative, first_name="Ahmed", last_name="Ouazzani", phone_number="0699999999")
-        create_member(cooperative=self.cooperative, first_name="Fatima", last_name="Bennani", phone_number="0688888888")
+        create_member(
+            cooperative=self.cooperative,
+            first_name="Ahmed",
+            last_name="Ouazzani",
+            phone_number="0699999999",
+        )
+        create_member(
+            cooperative=self.cooperative,
+            first_name="Fatima",
+            last_name="Bennani",
+            phone_number="0688888888",
+        )
 
         self._auth(self.admin)
         response = self.client.get(reverse("reporting:export-members"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            response["Content-Type"], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            response["Content-Type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
         content = b"".join(response.streaming_content) if response.streaming else response.content
@@ -151,7 +193,9 @@ class ReportingTestCase(APITestCase):
         )
         self._auth(self.admin)
         far_future = "2099-01-01"
-        response = self.client.get(reverse("reporting:export-stock-movements"), {"date_from": far_future})
+        response = self.client.get(
+            reverse("reporting:export-stock-movements"), {"date_from": far_future}
+        )
         content = b"".join(response.streaming_content) if response.streaming else response.content
         wb = load_workbook(BytesIO(content))
         ws = wb.active
@@ -161,9 +205,18 @@ class ReportingTestCase(APITestCase):
 
     def test_sales_orders_export_contains_correct_data(self) -> None:
         sales_services.create_sales_order(
-            cooperative=self.cooperative, customer=self.customer, warehouse=self.warehouse,
-            lines=[{"product": self.product, "quantity_ordered": Decimal("5"), "unit_price": Decimal("50.00")}],
-            actor=self.admin, order_date=date(2026, 7, 1),
+            cooperative=self.cooperative,
+            customer=self.customer,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("5"),
+                    "unit_price": Decimal("50.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date=date(2026, 7, 1),
         )
         self._auth(self.admin)
         response = self.client.get(reverse("reporting:export-sales-orders"))
@@ -177,16 +230,25 @@ class ReportingTestCase(APITestCase):
 
     def _create_purchase_order(self):
         supplier = Partner.objects.create(
-            cooperative=self.cooperative, code="SUP-0001", name="Fournisseur Atlas",
-            is_supplier=True, phone_number="0611111111",
+            cooperative=self.cooperative,
+            code="SUP-0001",
+            name="Fournisseur Atlas",
+            is_supplier=True,
+            phone_number="0611111111",
         )
         return purchase_services.create_purchase_order(
-            cooperative=self.cooperative, supplier=supplier, warehouse=self.warehouse,
-            lines=[{
-                "product": self.product, "quantity_ordered": Decimal("10"),
-                "unit_price": Decimal("30.00"),
-            }],
-            actor=self.admin, order_date=date(2026, 7, 10),
+            cooperative=self.cooperative,
+            supplier=supplier,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("10"),
+                    "unit_price": Decimal("30.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date=date(2026, 7, 10),
         )
 
     def test_purchase_orders_export_contains_correct_data(self) -> None:
@@ -203,8 +265,11 @@ class ReportingTestCase(APITestCase):
 
     def test_partners_export_filters_by_kind(self) -> None:
         Partner.objects.create(
-            cooperative=self.cooperative, code="SUP-0001", name="Fournisseur Atlas",
-            is_supplier=True, phone_number="0622222222",
+            cooperative=self.cooperative,
+            code="SUP-0001",
+            name="Fournisseur Atlas",
+            is_supplier=True,
+            phone_number="0622222222",
         )
         self._auth(self.admin)
         response = self.client.get(reverse("reporting:export-partners"), {"kind": "supplier"})
@@ -242,11 +307,15 @@ class ReportingTestCase(APITestCase):
         from apps.accounting.models import Account, Journal
 
         journal = Journal.objects.create(
-            cooperative=self.cooperative, code="JV", name={"fr": "Journal de vente"},
+            cooperative=self.cooperative,
+            code="JV",
+            name={"fr": "Journal de vente"},
             journal_type="sales",
         )
         account = Account.objects.create(
-            cooperative=self.cooperative, code="5141", name={"fr": "Banque"},
+            cooperative=self.cooperative,
+            code="5141",
+            name={"fr": "Banque"},
             account_type="treasury",
         )
         return journal, account
@@ -256,16 +325,22 @@ class ReportingTestCase(APITestCase):
         from apps.accounting.services import create_accounting_entry
 
         create_accounting_entry(
-            cooperative=self.cooperative, journal=journal, entry_date=date(2026, 7, 15),
+            cooperative=self.cooperative,
+            journal=journal,
+            entry_date=date(2026, 7, 15),
             description="Vente n°1",
             lines_data=[
                 {
-                    "account": account, "label": "Banque",
-                    "debit": Decimal("100.00"), "credit": Decimal("0"),
+                    "account": account,
+                    "label": "Banque",
+                    "debit": Decimal("100.00"),
+                    "credit": Decimal("0"),
                 },
                 {
-                    "account": account, "label": "Ventes",
-                    "debit": Decimal("0"), "credit": Decimal("100.00"),
+                    "account": account,
+                    "label": "Ventes",
+                    "debit": Decimal("0"),
+                    "credit": Decimal("100.00"),
                 },
             ],
             actor=self.admin,
@@ -286,15 +361,21 @@ class ReportingTestCase(APITestCase):
         from apps.accounting.services import create_accounting_entry
 
         create_accounting_entry(
-            cooperative=self.cooperative, journal=journal, entry_date=date(2026, 7, 15),
+            cooperative=self.cooperative,
+            journal=journal,
+            entry_date=date(2026, 7, 15),
             lines_data=[
                 {
-                    "account": account, "label": "Banque",
-                    "debit": Decimal("100.00"), "credit": Decimal("0"),
+                    "account": account,
+                    "label": "Banque",
+                    "debit": Decimal("100.00"),
+                    "credit": Decimal("0"),
                 },
                 {
-                    "account": account, "label": "Ventes",
-                    "debit": Decimal("0"), "credit": Decimal("100.00"),
+                    "account": account,
+                    "label": "Ventes",
+                    "debit": Decimal("0"),
+                    "credit": Decimal("100.00"),
                 },
             ],
             actor=self.admin,

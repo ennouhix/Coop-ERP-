@@ -11,6 +11,7 @@ Endpoints :
 - POST       /api/v1/catalog/products/{id}/deactivate/
 - POST       /api/v1/catalog/products/{id}/reactivate/
 """
+
 from __future__ import annotations
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -77,10 +78,15 @@ class CategoryListCreateView(_CatalogPermissionMixin, generics.ListCreateAPIView
         try:
             category.full_clean()
         except DjangoValidationError as exc:
-            return Response({"error": {"message": "; ".join(exc.messages)}}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": {"message": "; ".join(exc.messages)}}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         category.save()
-        return Response(CategorySerializer(category, context={"request": request}).data, status=status.HTTP_201_CREATED)
+        return Response(
+            CategorySerializer(category, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class CategoryDetailView(_CatalogPermissionMixin, generics.RetrieveUpdateAPIView):
@@ -92,16 +98,23 @@ class CategoryDetailView(_CatalogPermissionMixin, generics.RetrieveUpdateAPIView
     def update(self, request: Request, *args, **kwargs) -> Response:
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial, context={"request": request})
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         updated = serializer.save()
 
         try:
             updated.full_clean()
         except DjangoValidationError as exc:
-            return Response({"error": {"message": "; ".join(exc.messages)}}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": {"message": "; ".join(exc.messages)}}, status=status.HTTP_400_BAD_REQUEST
+            )
 
-        return Response(CategorySerializer(updated, context={"request": request}).data, status=status.HTTP_200_OK)
+        return Response(
+            CategorySerializer(updated, context={"request": request}).data,
+            status=status.HTTP_200_OK,
+        )
 
 
 class ProductListCreateView(_CatalogPermissionMixin, generics.ListCreateAPIView):
@@ -111,7 +124,9 @@ class ProductListCreateView(_CatalogPermissionMixin, generics.ListCreateAPIView)
     ordering_fields = ["sku", "created_at"]
 
     def get_queryset(self):  # noqa: ANN201
-        return Product.all_objects.filter(cooperative_id=self.request.user.cooperative_id).select_related("category", "unit")
+        return Product.all_objects.filter(
+            cooperative_id=self.request.user.cooperative_id
+        ).select_related("category", "unit")
 
     def get_serializer_class(self):  # noqa: ANN201
         return ProductCreateSerializer if self.request.method == "POST" else ProductSerializer
@@ -121,7 +136,8 @@ class ProductListCreateView(_CatalogPermissionMixin, generics.ListCreateAPIView)
         serializer.is_valid(raise_exception=True)
         product = create_product(cooperative=request.user.cooperative, **serializer.validated_data)
         return Response(
-            ProductSerializer(product, context={"request": request}).data, status=status.HTTP_201_CREATED
+            ProductSerializer(product, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
         )
 
 
@@ -129,14 +145,18 @@ class ProductDetailView(_CatalogPermissionMixin, generics.RetrieveUpdateAPIView)
     serializer_class = ProductSerializer
 
     def get_queryset(self):  # noqa: ANN201
-        return Product.all_objects.filter(cooperative_id=self.request.user.cooperative_id).select_related("category", "unit")
+        return Product.all_objects.filter(
+            cooperative_id=self.request.user.cooperative_id
+        ).select_related("category", "unit")
 
 
 class ProductDeactivateView(APIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("catalog.edit")]
 
     def post(self, request: Request, product_id: str) -> Response:
-        product = get_object_or_404(Product, pk=product_id, cooperative_id=request.user.cooperative_id)
+        product = get_object_or_404(
+            Product, pk=product_id, cooperative_id=request.user.cooperative_id
+        )
         product.is_active = False
         product.save(update_fields=["is_active"])
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -153,4 +173,6 @@ class ProductReactivateView(APIView):
         )
         product.is_active = True
         product.save(update_fields=["is_active"])
-        return Response(ProductSerializer(product, context={"request": request}).data, status=status.HTTP_200_OK)
+        return Response(
+            ProductSerializer(product, context={"request": request}).data, status=status.HTTP_200_OK
+        )

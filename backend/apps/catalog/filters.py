@@ -1,4 +1,5 @@
 """Filtres pour la liste des produits."""
+
 from __future__ import annotations
 
 import django_filters

@@ -7,6 +7,7 @@ Endpoints :
 - POST       /api/v1/partners/{id}/deactivate/ -> désactivation
 - POST       /api/v1/partners/{id}/reactivate/ -> réactivation
 """
+
 from __future__ import annotations
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -56,9 +57,13 @@ class PartnerListCreateView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            partner = create_partner(cooperative=request.user.cooperative, **serializer.validated_data)
+            partner = create_partner(
+                cooperative=request.user.cooperative, **serializer.validated_data
+            )
         except DjangoValidationError as exc:
-            return Response({"error": {"message": "; ".join(exc.messages)}}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": {"message": "; ".join(exc.messages)}}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         return Response(PartnerSerializer(partner).data, status=status.HTTP_201_CREATED)
 
@@ -85,7 +90,9 @@ class PartnerDetailView(generics.RetrieveUpdateAPIView):
         try:
             updated.full_clean()
         except DjangoValidationError as exc:
-            return Response({"error": {"message": "; ".join(exc.messages)}}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": {"message": "; ".join(exc.messages)}}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         return Response(PartnerSerializer(updated).data, status=status.HTTP_200_OK)
 
@@ -94,7 +101,9 @@ class PartnerDeactivateView(APIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("partners.edit")]
 
     def post(self, request: Request, partner_id: str) -> Response:
-        partner = get_object_or_404(Partner, pk=partner_id, cooperative_id=request.user.cooperative_id)
+        partner = get_object_or_404(
+            Partner, pk=partner_id, cooperative_id=request.user.cooperative_id
+        )
         partner.status = "inactive"
         partner.is_active = False
         partner.save(update_fields=["status", "is_active"])

@@ -8,6 +8,7 @@ Endpoints :
 - POST      /api/v1/sales/orders/{id}/deliver/   -> livraison (sortie de stock réelle)
 - POST      /api/v1/sales/orders/{id}/cancel/    -> annulation
 """
+
 from __future__ import annotations
 
 from django.shortcuts import get_object_or_404
@@ -24,7 +25,11 @@ from apps.partners.models import Partner
 from apps.roles_permissions.permissions import RequirePermission
 from apps.sales import services
 from apps.sales.models import SalesOrder
-from apps.sales.serializers import SalesDeliverySerializer, SalesOrderCreateSerializer, SalesOrderSerializer
+from apps.sales.serializers import (
+    SalesDeliverySerializer,
+    SalesOrderCreateSerializer,
+    SalesOrderSerializer,
+)
 from apps.warehouses.models import Warehouse
 
 
@@ -34,7 +39,11 @@ class SalesOrderListCreateView(generics.ListCreateAPIView):
     ordering_fields = ["order_date", "created_at"]
 
     def get_queryset(self):  # noqa: ANN201
-        return SalesOrder.objects.select_related("customer", "warehouse").prefetch_related("lines__product").all()
+        return (
+            SalesOrder.objects.select_related("customer", "warehouse")
+            .prefetch_related("lines__product")
+            .all()
+        )
 
     def get_permissions(self):  # noqa: ANN201
         base = [IsAuthenticated(), IsCooperativeMember()]
@@ -52,20 +61,32 @@ class SalesOrderListCreateView(generics.ListCreateAPIView):
         cooperative_id = request.user.cooperative_id
 
         customer = get_object_or_404(Partner, pk=data["customer_id"], cooperative_id=cooperative_id)
-        warehouse = get_object_or_404(Warehouse, pk=data["warehouse_id"], cooperative_id=cooperative_id)
+        warehouse = get_object_or_404(
+            Warehouse, pk=data["warehouse_id"], cooperative_id=cooperative_id
+        )
 
         resolved_lines = []
         for line in data["lines"]:
-            product = get_object_or_404(Product, pk=line["product_id"], cooperative_id=cooperative_id)
+            product = get_object_or_404(
+                Product, pk=line["product_id"], cooperative_id=cooperative_id
+            )
             resolved_lines.append(
-                {"product": product, "quantity_ordered": line["quantity_ordered"], "unit_price": line["unit_price"]}
+                {
+                    "product": product,
+                    "quantity_ordered": line["quantity_ordered"],
+                    "unit_price": line["unit_price"],
+                }
             )
 
         try:
             order = services.create_sales_order(
-                cooperative=request.user.cooperative, customer=customer, warehouse=warehouse,
-                lines=resolved_lines, actor=request.user,
-                order_date=data["order_date"], expected_delivery_date=data.get("expected_delivery_date"),
+                cooperative=request.user.cooperative,
+                customer=customer,
+                warehouse=warehouse,
+                lines=resolved_lines,
+                actor=request.user,
+                order_date=data["order_date"],
+                expected_delivery_date=data.get("expected_delivery_date"),
                 notes=data["notes"],
             )
         except services.SalesOrderError as exc:
@@ -79,14 +100,20 @@ class SalesOrderDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("sales.view")]
 
     def get_queryset(self):  # noqa: ANN201
-        return SalesOrder.objects.select_related("customer", "warehouse").prefetch_related("lines__product").all()
+        return (
+            SalesOrder.objects.select_related("customer", "warehouse")
+            .prefetch_related("lines__product")
+            .all()
+        )
 
 
 class SalesOrderConfirmView(APIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("sales.edit")]
 
     def post(self, request: Request, order_id: str) -> Response:
-        order = get_object_or_404(SalesOrder, pk=order_id, cooperative_id=request.user.cooperative_id)
+        order = get_object_or_404(
+            SalesOrder, pk=order_id, cooperative_id=request.user.cooperative_id
+        )
         try:
             services.confirm_sales_order(order=order, actor=request.user)
         except services.SalesOrderError as exc:
@@ -98,7 +125,9 @@ class SalesOrderCancelView(APIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("sales.edit")]
 
     def post(self, request: Request, order_id: str) -> Response:
-        order = get_object_or_404(SalesOrder, pk=order_id, cooperative_id=request.user.cooperative_id)
+        order = get_object_or_404(
+            SalesOrder, pk=order_id, cooperative_id=request.user.cooperative_id
+        )
         try:
             services.cancel_sales_order(order=order, actor=request.user)
         except services.SalesOrderError as exc:
@@ -110,7 +139,9 @@ class SalesOrderDeliverView(APIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("sales.edit")]
 
     def post(self, request: Request, order_id: str) -> Response:
-        order = get_object_or_404(SalesOrder, pk=order_id, cooperative_id=request.user.cooperative_id)
+        order = get_object_or_404(
+            SalesOrder, pk=order_id, cooperative_id=request.user.cooperative_id
+        )
         serializer = SalesDeliverySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

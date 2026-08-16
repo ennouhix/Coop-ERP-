@@ -2,6 +2,7 @@
 Tests des permissions par rôle modulables depuis le panneau d'administration :
 surcharges par coopérative, isolation tenant, et règles de garde.
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
@@ -23,16 +24,25 @@ class RolePermissionsTestCase(APITestCase):
         self.cooperative = Cooperative.objects.create(name="Coopérative Atlas", slug="atlas")
 
         self.owner = User.objects.create_user(
-            username="owner", email="owner@atlas.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="owner",
+            username="owner",
+            email="owner@atlas.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="owner",
         )
         self.admin = User.objects.create_user(
-            username="admin", email="admin@atlas.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="admin",
+            username="admin",
+            email="admin@atlas.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="admin",
         )
         self.staff = User.objects.create_user(
-            username="staff", email="staff@atlas.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@atlas.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
 
         self.url = reverse("roles_permissions:role-permissions")
@@ -50,6 +60,11 @@ class RolePermissionsTestCase(APITestCase):
 
     def test_default_matrix_applies_without_overrides(self) -> None:
         self.assertTrue(
+            has_permission_for_cooperative(
+                cooperative_id=self.cooperative.id, role="staff", code="catalog.view"
+            )
+        )
+        self.assertFalse(
             has_permission_for_cooperative(
                 cooperative_id=self.cooperative.id, role="staff", code="catalog.edit"
             )
@@ -154,8 +169,11 @@ class RolePermissionsTestCase(APITestCase):
     def test_overrides_do_not_leak_between_cooperatives(self) -> None:
         other_coop = Cooperative.objects.create(name="Coopérative Tanger", slug="tanger")
         other_admin = User.objects.create_user(
-            username="tanger-admin", email="admin@tanger.ma", password="MotDePasseSolide123",
-            cooperative=other_coop, role="admin",
+            username="tanger-admin",
+            email="admin@tanger.ma",
+            password="MotDePasseSolide123",
+            cooperative=other_coop,
+            role="admin",
         )
 
         self._auth(other_admin)

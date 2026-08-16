@@ -9,6 +9,7 @@ Endpoints exposés (voir urls.py) :
 - PATCH  /api/v1/auth/me/               -> mise à jour partielle du profil
 - POST   /api/v1/auth/password/change/  -> changer son mot de passe
 """
+
 from __future__ import annotations
 
 from rest_framework import generics, status
@@ -46,8 +47,12 @@ class LoginView(TokenObtainPairView):
             user = User.objects.filter(email__iexact=email).first() if email else None
             if user is not None and user.cooperative_id:
                 log_activity(
-                    cooperative=user.cooperative, actor=user, action="user.login",
-                    target_type="User", target_id=user.id, target_repr=user.email,
+                    cooperative=user.cooperative,
+                    actor=user,
+                    action="user.login",
+                    target_type="User",
+                    target_id=user.id,
+                    target_repr=user.email,
                     ip_address=request.META.get("REMOTE_ADDR"),
                 )
         return response
@@ -74,14 +79,23 @@ class LogoutView(APIView):
             RefreshToken(refresh_token).blacklist()
         except TokenError:
             return Response(
-                {"error": {"code": "invalid_token", "message": "Token de rafraîchissement invalide."}},
+                {
+                    "error": {
+                        "code": "invalid_token",
+                        "message": "Token de rafraîchissement invalide.",
+                    }
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if request.user.cooperative_id:
             log_activity(
-                cooperative=request.user.cooperative, actor=request.user, action="user.logout",
-                target_type="User", target_id=request.user.id, target_repr=request.user.email,
+                cooperative=request.user.cooperative,
+                actor=request.user,
+                action="user.logout",
+                target_type="User",
+                target_id=request.user.id,
+                target_repr=request.user.email,
             )
 
         return Response(status=status.HTTP_205_RESET_CONTENT)

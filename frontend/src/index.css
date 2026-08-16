@@ -38,6 +38,24 @@
 }
 
 @layer components {
+  /* Apparition au défilement (landing) : l'opacité est gérée par JS
+   * (IntersectionObserver), jamais par hover. Respecte la réduction de
+   * mouvement via le bloc @media en fin de fichier. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(26px);
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   /* Papier quadrillé très léger pour la zone de travail. */
   .app-main {
     background-color: #faf7f1;

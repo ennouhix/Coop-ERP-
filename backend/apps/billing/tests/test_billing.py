@@ -1,6 +1,7 @@
 """
 Tests du module billing.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -28,28 +29,47 @@ class BillingTestCase(APITestCase):
         self.cooperative = Cooperative.objects.create(name="Coopérative Argane", slug="argane")
 
         self.admin = User.objects.create_user(
-            username="admin", email="admin@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="admin",
+            username="admin",
+            email="admin@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="admin",
         )
         self.accountant = User.objects.create_user(
-            username="acct", email="acct@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="accountant",
+            username="acct",
+            email="acct@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="accountant",
         )
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
 
-        self.unit = Unit.objects.create(cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight")
+        self.unit = Unit.objects.create(
+            cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight"
+        )
         self.product = Product.objects.create(
-            cooperative=self.cooperative, sku="PRD-00001", name={"fr": "Huile d'argane"}, unit=self.unit,
+            cooperative=self.cooperative,
+            sku="PRD-00001",
+            name={"fr": "Huile d'argane"},
+            unit=self.unit,
         )
         self.warehouse = Warehouse.objects.create(
             cooperative=self.cooperative, code="WH-0001", name="Entrepôt", is_default=True
         )
         self.customer = Partner.objects.create(
-            cooperative=self.cooperative, code="PART-0001", name="Épicerie Al Baraka",
-            is_customer=True, is_supplier=False, phone_number="0612345678", payment_terms_days=30,
+            cooperative=self.cooperative,
+            code="PART-0001",
+            name="Épicerie Al Baraka",
+            is_customer=True,
+            is_supplier=False,
+            phone_number="0612345678",
+            payment_terms_days=30,
         )
 
         self.invoices_url = reverse("billing:invoice-list-create")
@@ -90,21 +110,38 @@ class BillingTestCase(APITestCase):
 
     def test_generate_invoice_from_delivered_order(self) -> None:
         inventory_services.record_stock_in(
-            product=self.product, warehouse=self.warehouse, quantity=Decimal("100"), actor=self.admin
+            product=self.product,
+            warehouse=self.warehouse,
+            quantity=Decimal("100"),
+            actor=self.admin,
         )
         order = sales_services.create_sales_order(
-            cooperative=self.cooperative, customer=self.customer, warehouse=self.warehouse,
-            lines=[{"product": self.product, "quantity_ordered": Decimal("20"), "unit_price": Decimal("50.00")}],
-            actor=self.admin, order_date="2026-07-01",
+            cooperative=self.cooperative,
+            customer=self.customer,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("20"),
+                    "unit_price": Decimal("50.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date="2026-07-01",
         )
         sales_services.confirm_sales_order(order=order, actor=self.admin)
         line = order.lines.first()
-        sales_services.record_sales_delivery(order=order, actor=self.admin, deliveries=[{"line_id": line.id, "quantity": Decimal("20")}])
+        sales_services.record_sales_delivery(
+            order=order,
+            actor=self.admin,
+            deliveries=[{"line_id": line.id, "quantity": Decimal("20")}],
+        )
 
         self._auth(self.accountant)
         response = self.client.post(
             reverse("billing:invoice-from-order"),
-            {"order_id": str(order.id), "issue_date": "2026-07-05"}, format="json",
+            {"order_id": str(order.id), "issue_date": "2026-07-05"},
+            format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Decimal(response.data["total_amount"]), Decimal("1000.00"))
@@ -112,29 +149,55 @@ class BillingTestCase(APITestCase):
 
     def test_cannot_generate_invoice_from_undelivered_order(self) -> None:
         order = sales_services.create_sales_order(
-            cooperative=self.cooperative, customer=self.customer, warehouse=self.warehouse,
-            lines=[{"product": self.product, "quantity_ordered": Decimal("20"), "unit_price": Decimal("50.00")}],
-            actor=self.admin, order_date="2026-07-01",
+            cooperative=self.cooperative,
+            customer=self.customer,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("20"),
+                    "unit_price": Decimal("50.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date="2026-07-01",
         )
         self._auth(self.accountant)
         response = self.client.post(
             reverse("billing:invoice-from-order"),
-            {"order_id": str(order.id), "issue_date": "2026-07-05"}, format="json",
+            {"order_id": str(order.id), "issue_date": "2026-07-05"},
+            format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_cannot_double_invoice_same_order(self) -> None:
         inventory_services.record_stock_in(
-            product=self.product, warehouse=self.warehouse, quantity=Decimal("100"), actor=self.admin
+            product=self.product,
+            warehouse=self.warehouse,
+            quantity=Decimal("100"),
+            actor=self.admin,
         )
         order = sales_services.create_sales_order(
-            cooperative=self.cooperative, customer=self.customer, warehouse=self.warehouse,
-            lines=[{"product": self.product, "quantity_ordered": Decimal("20"), "unit_price": Decimal("50.00")}],
-            actor=self.admin, order_date="2026-07-01",
+            cooperative=self.cooperative,
+            customer=self.customer,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("20"),
+                    "unit_price": Decimal("50.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date="2026-07-01",
         )
         sales_services.confirm_sales_order(order=order, actor=self.admin)
         line = order.lines.first()
-        sales_services.record_sales_delivery(order=order, actor=self.admin, deliveries=[{"line_id": line.id, "quantity": Decimal("20")}])
+        sales_services.record_sales_delivery(
+            order=order,
+            actor=self.admin,
+            deliveries=[{"line_id": line.id, "quantity": Decimal("20")}],
+        )
 
         self._auth(self.accountant)
         payload = {"order_id": str(order.id), "issue_date": "2026-07-05"}
@@ -150,7 +213,9 @@ class BillingTestCase(APITestCase):
         self.client.post(reverse("billing:invoice-issue", args=[invoice["id"]]))
 
         pay_url = reverse("billing:invoice-payment", args=[invoice["id"]])
-        response = self.client.post(pay_url, {"amount": "500.00", "payment_date": "2026-07-10", "payment_method": "cash"})
+        response = self.client.post(
+            pay_url, {"amount": "500.00", "payment_date": "2026-07-10", "payment_method": "cash"}
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["status"], "paid")
         self.assertEqual(Decimal(response.data["balance_due"]), Decimal("0.00"))
@@ -197,7 +262,10 @@ class BillingTestCase(APITestCase):
         self._auth(self.accountant)
         invoice = self.client.post(self.invoices_url, self._manual_payload(), format="json").data
         self.client.post(reverse("billing:invoice-issue", args=[invoice["id"]]))
-        self.client.post(reverse("billing:invoice-payment", args=[invoice["id"]]), {"amount": "100.00", "payment_date": "2026-07-10"})
+        self.client.post(
+            reverse("billing:invoice-payment", args=[invoice["id"]]),
+            {"amount": "100.00", "payment_date": "2026-07-10"},
+        )
 
         response = self.client.post(reverse("billing:invoice-cancel", args=[invoice["id"]]))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

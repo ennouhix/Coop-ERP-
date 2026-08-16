@@ -2,6 +2,7 @@
 Throttle dédié à l'inscription — endpoint public, donc particulièrement
 exposé à l'abus (création massive de fausses coopératives, spam).
 """
+
 from __future__ import annotations
 
 from rest_framework.throttling import SimpleRateThrottle

@@ -3,6 +3,7 @@ Modèle Invitation — permet à un OWNER/ADMIN d'inviter un collègue par
 email avec un rôle prédéfini, sans que celui-ci ait besoin de connaître
 un mot de passe temporaire (plus sûr, expérience plus fluide).
 """
+
 from __future__ import annotations
 
 import secrets
@@ -21,7 +22,7 @@ def generate_invitation_token() -> str:
     return secrets.token_urlsafe(32)
 
 
-def default_invitation_expiry() -> "timezone.datetime":
+def default_invitation_expiry() -> timezone.datetime:
     return timezone.now() + timezone.timedelta(days=INVITATION_VALIDITY_DAYS)
 
 
@@ -36,8 +37,12 @@ class Invitation(TenantBaseModel):
 
     email = models.EmailField(db_index=True)
     role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.STAFF)
-    token = models.CharField(max_length=64, unique=True, default=generate_invitation_token, editable=False)
-    status = models.CharField(max_length=10, choices=InvitationStatus.choices, default=InvitationStatus.PENDING)
+    token = models.CharField(
+        max_length=64, unique=True, default=generate_invitation_token, editable=False
+    )
+    status = models.CharField(
+        max_length=10, choices=InvitationStatus.choices, default=InvitationStatus.PENDING
+    )
     expires_at = models.DateTimeField(default=default_invitation_expiry)
     accepted_at = models.DateTimeField(null=True, blank=True)
     invited_by = models.ForeignKey(

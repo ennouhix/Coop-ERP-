@@ -6,6 +6,7 @@ PurchaseOrderLine.quantity_received progresse au fil des réceptions
 apps.purchases.services, qui orchestre la mise à jour de la ligne ET la
 création du StockMovement correspondant (Epic 8) dans la même transaction.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -27,12 +28,18 @@ class PurchaseOrder(TenantBaseModel):
     """Une commande d'achat auprès d'un fournisseur."""
 
     order_number = models.CharField(max_length=20, db_index=True, editable=False)
-    supplier = models.ForeignKey("partners.Partner", on_delete=models.PROTECT, related_name="purchase_orders")
+    supplier = models.ForeignKey(
+        "partners.Partner", on_delete=models.PROTECT, related_name="purchase_orders"
+    )
     warehouse = models.ForeignKey(
-        "warehouses.Warehouse", on_delete=models.PROTECT, related_name="purchase_orders",
+        "warehouses.Warehouse",
+        on_delete=models.PROTECT,
+        related_name="purchase_orders",
         help_text="Entrepôt de destination des marchandises reçues.",
     )
-    status = models.CharField(max_length=20, choices=PurchaseOrderStatus.choices, default=PurchaseOrderStatus.DRAFT)
+    status = models.CharField(
+        max_length=20, choices=PurchaseOrderStatus.choices, default=PurchaseOrderStatus.DRAFT
+    )
 
     order_date = models.DateField()
     expected_delivery_date = models.DateField(null=True, blank=True)
@@ -43,7 +50,10 @@ class PurchaseOrder(TenantBaseModel):
         verbose_name_plural = "Commandes d'achat"
         ordering = ["-order_date", "-created_at"]
         constraints = [
-            models.UniqueConstraint(fields=["cooperative", "order_number"], name="unique_purchase_order_number_per_cooperative"),
+            models.UniqueConstraint(
+                fields=["cooperative", "order_number"],
+                name="unique_purchase_order_number_per_cooperative",
+            ),
         ]
         indexes = [models.Index(fields=["cooperative", "status"])]
 
@@ -57,7 +67,9 @@ class PurchaseOrder(TenantBaseModel):
     @property
     def is_fully_received(self) -> bool:
         lines = list(self.lines.all())
-        return bool(lines) and all(line.quantity_received >= line.quantity_ordered for line in lines)
+        return bool(lines) and all(
+            line.quantity_received >= line.quantity_ordered for line in lines
+        )
 
     @property
     def has_any_receipt(self) -> bool:
@@ -67,8 +79,12 @@ class PurchaseOrder(TenantBaseModel):
 class PurchaseOrderLine(TenantBaseModel):
     """Une ligne de produit au sein d'une commande d'achat."""
 
-    purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name="lines")
-    product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT, related_name="purchase_order_lines")
+    purchase_order = models.ForeignKey(
+        PurchaseOrder, on_delete=models.CASCADE, related_name="lines"
+    )
+    product = models.ForeignKey(
+        "catalog.Product", on_delete=models.PROTECT, related_name="purchase_order_lines"
+    )
 
     quantity_ordered = models.DecimalField(max_digits=14, decimal_places=3)
     quantity_received = models.DecimalField(max_digits=14, decimal_places=3, default=Decimal("0"))
@@ -78,9 +94,13 @@ class PurchaseOrderLine(TenantBaseModel):
         verbose_name = "Ligne de commande d'achat"
         verbose_name_plural = "Lignes de commande d'achat"
         constraints = [
-            models.CheckConstraint(condition=models.Q(quantity_ordered__gt=0), name="purchase_line_quantity_ordered_positive"),
             models.CheckConstraint(
-                condition=models.Q(quantity_received__gte=0) & models.Q(quantity_received__lte=models.F("quantity_ordered")),
+                condition=models.Q(quantity_ordered__gt=0),
+                name="purchase_line_quantity_ordered_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quantity_received__gte=0)
+                & models.Q(quantity_received__lte=models.F("quantity_ordered")),
                 name="purchase_line_received_within_ordered",
             ),
         ]

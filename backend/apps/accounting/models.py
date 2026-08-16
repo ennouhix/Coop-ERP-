@@ -10,6 +10,7 @@ Architecture comptable :
 Règle fondamentale : Σ débit == Σ crédit (vérifiée à la validation dans services.py).
 Toutes les tables héritent de TenantBaseModel pour l'isolation multi-tenant.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal

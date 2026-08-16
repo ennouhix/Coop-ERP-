@@ -1,6 +1,7 @@
 """
 Tests du module members.
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
@@ -11,7 +12,6 @@ from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.cooperatives.models import Cooperative
-from apps.members.models import Member
 from apps.members.services import create_member
 
 User = get_user_model()
@@ -27,24 +27,38 @@ VALID_MEMBER_PAYLOAD = {
 class MemberTestCase(APITestCase):
     def setUp(self) -> None:
         cache.clear()
-        self.cooperative = Cooperative.objects.create(name="Coopérative Argane Sud", slug="argane-sud")
+        self.cooperative = Cooperative.objects.create(
+            name="Coopérative Argane Sud", slug="argane-sud"
+        )
         self.other_cooperative = Cooperative.objects.create(name="Autre Coop", slug="autre")
 
         self.owner = User.objects.create_user(
-            username="owner", email="owner@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="owner",
+            username="owner",
+            email="owner@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="owner",
         )
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
         self.accountant = User.objects.create_user(
-            username="acct", email="acct@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="accountant",
+            username="acct",
+            email="acct@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="accountant",
         )
         self.foreign_user = User.objects.create_user(
-            username="foreign", email="foreign@autre.ma", password="MotDePasseSolide123",
-            cooperative=self.other_cooperative, role="owner",
+            username="foreign",
+            email="foreign@autre.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.other_cooperative,
+            role="owner",
         )
 
         self.list_url = reverse("members:list-create")

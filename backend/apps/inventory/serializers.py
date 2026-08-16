@@ -14,6 +14,7 @@ appartient bien à la coopérative de l'utilisateur) se fait donc
 explicitement dans la vue via get_object_or_404, jamais via la validation
 automatique du serializer.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -32,8 +33,15 @@ class StockLevelSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockLevel
         fields = [
-            "id", "product", "product_sku", "warehouse", "warehouse_code",
-            "quantity", "unit_symbol", "is_below_threshold", "updated_at",
+            "id",
+            "product",
+            "product_sku",
+            "warehouse",
+            "warehouse_code",
+            "quantity",
+            "unit_symbol",
+            "is_below_threshold",
+            "updated_at",
         ]
         read_only_fields = fields
 
@@ -44,16 +52,28 @@ class StockLevelSerializer(serializers.ModelSerializer):
 class StockMovementSerializer(serializers.ModelSerializer):
     product_sku = serializers.CharField(source="product.sku", read_only=True)
     warehouse_code = serializers.CharField(source="warehouse.code", read_only=True)
-    destination_warehouse_code = serializers.CharField(source="destination_warehouse.code", read_only=True, default=None)
+    destination_warehouse_code = serializers.CharField(
+        source="destination_warehouse.code", read_only=True, default=None
+    )
     created_by_name = serializers.SerializerMethodField()
 
     class Meta:
         model = StockMovement
         fields = [
-            "id", "movement_type", "reason",
-            "product", "product_sku", "warehouse", "warehouse_code",
-            "destination_warehouse", "destination_warehouse_code",
-            "quantity", "reference", "notes", "created_by_name", "created_at",
+            "id",
+            "movement_type",
+            "reason",
+            "product",
+            "product_sku",
+            "warehouse",
+            "warehouse_code",
+            "destination_warehouse",
+            "destination_warehouse_code",
+            "quantity",
+            "reference",
+            "notes",
+            "created_by_name",
+            "created_at",
         ]
         read_only_fields = fields
 
@@ -67,7 +87,9 @@ class StockMovementInSerializer(serializers.Serializer):
     product_id = serializers.UUIDField()
     warehouse_id = serializers.UUIDField()
     quantity = serializers.DecimalField(max_digits=14, decimal_places=3, min_value=Decimal("0.001"))
-    reason = serializers.ChoiceField(choices=StockMovementReason.choices, default=StockMovementReason.ADJUSTMENT)
+    reason = serializers.ChoiceField(
+        choices=StockMovementReason.choices, default=StockMovementReason.ADJUSTMENT
+    )
     reference = serializers.CharField(max_length=100, required=False, allow_blank=True, default="")
     notes = serializers.CharField(required=False, allow_blank=True, default="")
 

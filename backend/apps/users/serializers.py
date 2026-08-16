@@ -1,6 +1,7 @@
 """
 Serializers du module users (gestion d'équipe et invitations).
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
@@ -18,7 +19,16 @@ class TeamMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "first_name", "last_name", "role", "phone_number", "is_active", "date_joined"]
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "role",
+            "phone_number",
+            "is_active",
+            "date_joined",
+        ]
         read_only_fields = fields
 
 

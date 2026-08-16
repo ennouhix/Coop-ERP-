@@ -3,6 +3,7 @@ Tests du module dashboard — construit un scénario réaliste traversant
 membres, partenaires, stock, achats, ventes et facturation pour vérifier
 que les agrégats retournés sont corrects.
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -34,32 +35,56 @@ class DashboardTestCase(APITestCase):
         self.cooperative = Cooperative.objects.create(name="Coopérative Argane", slug="argane")
 
         self.admin = User.objects.create_user(
-            username="admin", email="admin@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="admin",
+            username="admin",
+            email="admin@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="admin",
         )
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
 
-        self.unit = Unit.objects.create(cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight")
+        self.unit = Unit.objects.create(
+            cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight"
+        )
         self.product = Product.objects.create(
-            cooperative=self.cooperative, sku="PRD-00001", name={"fr": "Huile d'argane"}, unit=self.unit,
+            cooperative=self.cooperative,
+            sku="PRD-00001",
+            name={"fr": "Huile d'argane"},
+            unit=self.unit,
             reference_purchase_price=Decimal("20.00"),
         )
         self.warehouse = Warehouse.objects.create(
             cooperative=self.cooperative, code="WH-0001", name="Entrepôt", is_default=True
         )
         self.customer = Partner.objects.create(
-            cooperative=self.cooperative, code="PART-0001", name="Client A",
-            is_customer=True, is_supplier=False, phone_number="0612345678",
+            cooperative=self.cooperative,
+            code="PART-0001",
+            name="Client A",
+            is_customer=True,
+            is_supplier=False,
+            phone_number="0612345678",
         )
         self.supplier = Partner.objects.create(
-            cooperative=self.cooperative, code="PART-0002", name="Fournisseur A",
-            is_customer=False, is_supplier=True, phone_number="0611111111",
+            cooperative=self.cooperative,
+            code="PART-0002",
+            name="Fournisseur A",
+            is_customer=False,
+            is_supplier=True,
+            phone_number="0611111111",
         )
 
-        create_member(cooperative=self.cooperative, first_name="Ahmed", last_name="Ouazzani", phone_number="0699999999")
+        create_member(
+            cooperative=self.cooperative,
+            first_name="Ahmed",
+            last_name="Ouazzani",
+            phone_number="0699999999",
+        )
 
         self.summary_url = reverse("dashboard:summary")
 
@@ -103,75 +128,155 @@ class DashboardTestCase(APITestCase):
 
     def test_sales_revenue_reflects_issued_invoices_in_period(self) -> None:
         inventory_services.record_stock_in(
-            product=self.product, warehouse=self.warehouse, quantity=Decimal("100"), actor=self.admin
+            product=self.product,
+            warehouse=self.warehouse,
+            quantity=Decimal("100"),
+            actor=self.admin,
         )
         order = sales_services.create_sales_order(
-            cooperative=self.cooperative, customer=self.customer, warehouse=self.warehouse,
-            lines=[{"product": self.product, "quantity_ordered": Decimal("10"), "unit_price": Decimal("50.00")}],
-            actor=self.admin, order_date=date(2026, 7, 5),
+            cooperative=self.cooperative,
+            customer=self.customer,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("10"),
+                    "unit_price": Decimal("50.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date=date(2026, 7, 5),
         )
         sales_services.confirm_sales_order(order=order, actor=self.admin)
         line = order.lines.first()
-        sales_services.record_sales_delivery(order=order, actor=self.admin, deliveries=[{"line_id": line.id, "quantity": Decimal("10")}])
-        invoice = billing_services.generate_invoice_from_sales_order(order=order, actor=self.admin, issue_date=date(2026, 7, 6))
+        sales_services.record_sales_delivery(
+            order=order,
+            actor=self.admin,
+            deliveries=[{"line_id": line.id, "quantity": Decimal("10")}],
+        )
+        invoice = billing_services.generate_invoice_from_sales_order(
+            order=order, actor=self.admin, issue_date=date(2026, 7, 6)
+        )
         billing_services.issue_invoice(invoice=invoice, actor=self.admin)
 
         self._auth(self.admin)
-        response = self.client.get(self.summary_url, {"date_from": "2026-07-01", "date_to": "2026-07-31"})
-        self.assertEqual(Decimal(response.data["sales"]["revenue_invoiced_period"]), Decimal("500.00"))
+        response = self.client.get(
+            self.summary_url, {"date_from": "2026-07-01", "date_to": "2026-07-31"}
+        )
+        self.assertEqual(
+            Decimal(response.data["sales"]["revenue_invoiced_period"]), Decimal("500.00")
+        )
         self.assertEqual(response.data["sales"]["orders_delivered"], 1)
 
     def test_revenue_excludes_invoices_outside_period(self) -> None:
         inventory_services.record_stock_in(
-            product=self.product, warehouse=self.warehouse, quantity=Decimal("100"), actor=self.admin
+            product=self.product,
+            warehouse=self.warehouse,
+            quantity=Decimal("100"),
+            actor=self.admin,
         )
         order = sales_services.create_sales_order(
-            cooperative=self.cooperative, customer=self.customer, warehouse=self.warehouse,
-            lines=[{"product": self.product, "quantity_ordered": Decimal("10"), "unit_price": Decimal("50.00")}],
-            actor=self.admin, order_date=date(2026, 1, 5),
+            cooperative=self.cooperative,
+            customer=self.customer,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("10"),
+                    "unit_price": Decimal("50.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date=date(2026, 1, 5),
         )
         sales_services.confirm_sales_order(order=order, actor=self.admin)
         line = order.lines.first()
-        sales_services.record_sales_delivery(order=order, actor=self.admin, deliveries=[{"line_id": line.id, "quantity": Decimal("10")}])
-        invoice = billing_services.generate_invoice_from_sales_order(order=order, actor=self.admin, issue_date=date(2026, 1, 6))
+        sales_services.record_sales_delivery(
+            order=order,
+            actor=self.admin,
+            deliveries=[{"line_id": line.id, "quantity": Decimal("10")}],
+        )
+        invoice = billing_services.generate_invoice_from_sales_order(
+            order=order, actor=self.admin, issue_date=date(2026, 1, 6)
+        )
         billing_services.issue_invoice(invoice=invoice, actor=self.admin)
 
         self._auth(self.admin)
-        response = self.client.get(self.summary_url, {"date_from": "2026-07-01", "date_to": "2026-07-31"})
+        response = self.client.get(
+            self.summary_url, {"date_from": "2026-07-01", "date_to": "2026-07-31"}
+        )
         self.assertEqual(Decimal(response.data["sales"]["revenue_invoiced_period"]), Decimal("0"))
 
     def test_purchases_spend_reflects_confirmed_orders(self) -> None:
         purchases_services.create_purchase_order(
-            cooperative=self.cooperative, supplier=self.supplier, warehouse=self.warehouse,
-            lines=[{"product": self.product, "quantity_ordered": Decimal("20"), "unit_price": Decimal("15.00")}],
-            actor=self.admin, order_date=date(2026, 7, 2),
+            cooperative=self.cooperative,
+            supplier=self.supplier,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("20"),
+                    "unit_price": Decimal("15.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date=date(2026, 7, 2),
         )
         order = purchases_services.create_purchase_order(
-            cooperative=self.cooperative, supplier=self.supplier, warehouse=self.warehouse,
-            lines=[{"product": self.product, "quantity_ordered": Decimal("20"), "unit_price": Decimal("15.00")}],
-            actor=self.admin, order_date=date(2026, 7, 2),
+            cooperative=self.cooperative,
+            supplier=self.supplier,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("20"),
+                    "unit_price": Decimal("15.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date=date(2026, 7, 2),
         )
         purchases_services.confirm_purchase_order(order=order, actor=self.admin)
 
         self._auth(self.admin)
-        response = self.client.get(self.summary_url, {"date_from": "2026-07-01", "date_to": "2026-07-31"})
+        response = self.client.get(
+            self.summary_url, {"date_from": "2026-07-01", "date_to": "2026-07-31"}
+        )
         # Un seul des deux ordres est CONFIRMED (l'autre reste DRAFT, exclu du calcul)
-        self.assertEqual(Decimal(response.data["purchases"]["spend_confirmed_period"]), Decimal("300.00"))
+        self.assertEqual(
+            Decimal(response.data["purchases"]["spend_confirmed_period"]), Decimal("300.00")
+        )
         self.assertEqual(response.data["purchases"]["orders_draft"], 1)
         self.assertEqual(response.data["purchases"]["orders_confirmed"], 1)
 
     def test_billing_outstanding_and_overdue(self) -> None:
         inventory_services.record_stock_in(
-            product=self.product, warehouse=self.warehouse, quantity=Decimal("100"), actor=self.admin
+            product=self.product,
+            warehouse=self.warehouse,
+            quantity=Decimal("100"),
+            actor=self.admin,
         )
         order = sales_services.create_sales_order(
-            cooperative=self.cooperative, customer=self.customer, warehouse=self.warehouse,
-            lines=[{"product": self.product, "quantity_ordered": Decimal("10"), "unit_price": Decimal("50.00")}],
-            actor=self.admin, order_date=date(2026, 1, 5),
+            cooperative=self.cooperative,
+            customer=self.customer,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("10"),
+                    "unit_price": Decimal("50.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date=date(2026, 1, 5),
         )
         sales_services.confirm_sales_order(order=order, actor=self.admin)
         line = order.lines.first()
-        sales_services.record_sales_delivery(order=order, actor=self.admin, deliveries=[{"line_id": line.id, "quantity": Decimal("10")}])
+        sales_services.record_sales_delivery(
+            order=order,
+            actor=self.admin,
+            deliveries=[{"line_id": line.id, "quantity": Decimal("10")}],
+        )
         invoice = billing_services.generate_invoice_from_sales_order(
             order=order, actor=self.admin, issue_date=date(2026, 1, 6), due_date=date(2026, 1, 20)
         )
@@ -179,16 +284,25 @@ class DashboardTestCase(APITestCase):
 
         self._auth(self.admin)
         response = self.client.get(self.summary_url)
-        self.assertEqual(Decimal(response.data["billing"]["total_outstanding_balance"]), Decimal("500.00"))
-        self.assertEqual(response.data["billing"]["overdue_invoices_count"], 1)  # échéance largement dépassée
+        self.assertEqual(
+            Decimal(response.data["billing"]["total_outstanding_balance"]), Decimal("500.00")
+        )
+        self.assertEqual(
+            response.data["billing"]["overdue_invoices_count"], 1
+        )  # échéance largement dépassée
 
     def test_user_sees_only_own_cooperative_data(self) -> None:
         other_cooperative = Cooperative.objects.create(name="Autre Coop", slug="autre")
         other_admin = User.objects.create_user(
-            username="other_admin", email="other@autre.ma", password="MotDePasseSolide123",
-            cooperative=other_cooperative, role="admin",
+            username="other_admin",
+            email="other@autre.ma",
+            password="MotDePasseSolide123",
+            cooperative=other_cooperative,
+            role="admin",
         )
-        create_member(cooperative=self.cooperative, first_name="X", last_name="Y", phone_number="0600000000")
+        create_member(
+            cooperative=self.cooperative, first_name="X", last_name="Y", phone_number="0600000000"
+        )
 
         self._auth(other_admin)
         response = self.client.get(self.summary_url)

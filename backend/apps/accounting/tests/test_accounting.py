@@ -10,22 +10,35 @@ Couvre :
 6. Balance des comptes : Σ débit == Σ crédit
 7. Isolation multi-tenant : coopérative A ne voit pas les données de B
 """
+
 from __future__ import annotations
 
-import uuid
 from decimal import Decimal
 
 import pytest
 
-from apps.accounting.models import Account, AccountingEntry, AccountingEntryLine, AccountType, Journal, JournalType
-from apps.accounting.services import AccountingError, create_accounting_entry, get_general_ledger, get_trial_balance, post_entry
+from apps.accounting.models import (
+    Account,
+    AccountType,
+    Journal,
+    JournalType,
+)
+from apps.accounting.services import (
+    AccountingError,
+    create_accounting_entry,
+    get_general_ledger,
+    get_trial_balance,
+    post_entry,
+)
 
 
 @pytest.fixture
 def cooperative(db):
     from apps.cooperatives.models import Cooperative
+
     return Cooperative.objects.create(
         name="Coopérative Test",
+        slug="coop-test",
         ice="123456789",
         is_active=True,
     )
@@ -34,8 +47,10 @@ def cooperative(db):
 @pytest.fixture
 def cooperative_b(db):
     from apps.cooperatives.models import Cooperative
+
     return Cooperative.objects.create(
         name="Coopérative B",
+        slug="coop-b",
         ice="987654321",
         is_active=True,
     )
@@ -44,7 +59,9 @@ def cooperative_b(db):
 @pytest.fixture
 def user(db, cooperative):
     from apps.authentication.models import User
+
     return User.objects.create_user(
+        username="test_accountant",
         email="test@example.com",
         password="testpass123",
         cooperative=cooperative,
@@ -93,6 +110,7 @@ def account_revenue(db, cooperative):
 
 # ---- Tests ----
 
+
 @pytest.mark.django_db
 def test_entry_number_auto_generated(cooperative, journal, account_bank, account_capital, user):
     """Le numéro d'écriture doit être auto-généré au format JV-AAAA-NNNNN."""
@@ -130,7 +148,9 @@ def test_balanced_entry_can_be_posted(cooperative, journal, account_bank, accoun
 
 
 @pytest.mark.django_db
-def test_unbalanced_entry_cannot_be_posted(cooperative, journal, account_bank, account_capital, user):
+def test_unbalanced_entry_cannot_be_posted(
+    cooperative, journal, account_bank, account_capital, user
+):
     """Une écriture non équilibrée doit lever AccountingError à la validation."""
     entry = create_accounting_entry(
         cooperative=cooperative,
@@ -148,7 +168,9 @@ def test_unbalanced_entry_cannot_be_posted(cooperative, journal, account_bank, a
 
 
 @pytest.mark.django_db
-def test_already_posted_entry_cannot_be_posted_again(cooperative, journal, account_bank, account_capital, user):
+def test_already_posted_entry_cannot_be_posted_again(
+    cooperative, journal, account_bank, account_capital, user
+):
     """Double validation d'une écriture doit lever AccountingError."""
     entry = create_accounting_entry(
         cooperative=cooperative,
@@ -167,28 +189,37 @@ def test_already_posted_entry_cannot_be_posted_again(cooperative, journal, accou
 
 
 @pytest.mark.django_db
-def test_general_ledger_running_balance(cooperative, journal, account_bank, account_capital, account_revenue, user):
+def test_general_ledger_running_balance(
+    cooperative, journal, account_bank, account_capital, account_revenue, user
+):
     """Le solde progressif du grand livre doit s'accumuler correctement."""
     import datetime
+
     # Écriture 1 : apport banque 10000
     e1 = create_accounting_entry(
-        cooperative=cooperative, journal=journal,
-        entry_date=datetime.date(2024, 1, 1), description="Apport",
+        cooperative=cooperative,
+        journal=journal,
+        entry_date=datetime.date(2024, 1, 1),
+        description="Apport",
         lines_data=[
             {"account": account_bank, "debit": Decimal("10000"), "credit": Decimal("0")},
             {"account": account_capital, "debit": Decimal("0"), "credit": Decimal("10000")},
-        ], actor=user,
+        ],
+        actor=user,
     )
     post_entry(entry=e1, actor=user)
 
     # Écriture 2 : vente 2000
     e2 = create_accounting_entry(
-        cooperative=cooperative, journal=journal,
-        entry_date=datetime.date(2024, 1, 5), description="Vente",
+        cooperative=cooperative,
+        journal=journal,
+        entry_date=datetime.date(2024, 1, 5),
+        description="Vente",
         lines_data=[
             {"account": account_bank, "debit": Decimal("2000"), "credit": Decimal("0")},
             {"account": account_revenue, "debit": Decimal("0"), "credit": Decimal("2000")},
-        ], actor=user,
+        ],
+        actor=user,
     )
     post_entry(entry=e2, actor=user)
 
@@ -203,13 +234,17 @@ def test_general_ledger_running_balance(cooperative, journal, account_bank, acco
 def test_trial_balance_sums_correctly(cooperative, journal, account_bank, account_capital, user):
     """La balance : Σ soldes débiteurs == Σ soldes créditeurs."""
     import datetime
+
     entry = create_accounting_entry(
-        cooperative=cooperative, journal=journal,
-        entry_date=datetime.date(2024, 2, 1), description="Test balance",
+        cooperative=cooperative,
+        journal=journal,
+        entry_date=datetime.date(2024, 2, 1),
+        description="Test balance",
         lines_data=[
             {"account": account_bank, "debit": Decimal("8000"), "credit": Decimal("0")},
             {"account": account_capital, "debit": Decimal("0"), "credit": Decimal("8000")},
-        ], actor=user,
+        ],
+        actor=user,
     )
     post_entry(entry=entry, actor=user)
 
@@ -223,13 +258,17 @@ def test_trial_balance_sums_correctly(cooperative, journal, account_bank, accoun
 def test_tenant_isolation(cooperative, cooperative_b, journal, account_bank, account_capital, user):
     """Les écritures de la coopérative A ne doivent pas être visibles dans B."""
     import datetime
+
     entry = create_accounting_entry(
-        cooperative=cooperative, journal=journal,
-        entry_date=datetime.date(2024, 3, 1), description="Écriture A",
+        cooperative=cooperative,
+        journal=journal,
+        entry_date=datetime.date(2024, 3, 1),
+        description="Écriture A",
         lines_data=[
             {"account": account_bank, "debit": Decimal("500"), "credit": Decimal("0")},
             {"account": account_capital, "debit": Decimal("0"), "credit": Decimal("500")},
-        ], actor=user,
+        ],
+        actor=user,
     )
     post_entry(entry=entry, actor=user)
 
@@ -241,13 +280,17 @@ def test_tenant_isolation(cooperative, cooperative_b, journal, account_bank, acc
 def test_entry_requires_at_least_two_lines(cooperative, journal, account_bank, user):
     """Une écriture avec une seule ligne doit être refusée."""
     import datetime
+
     with pytest.raises(AccountingError, match="au moins deux lignes"):
         create_accounting_entry(
-            cooperative=cooperative, journal=journal,
-            entry_date=datetime.date(2024, 1, 1), description="Ligne unique",
+            cooperative=cooperative,
+            journal=journal,
+            entry_date=datetime.date(2024, 1, 1),
+            description="Ligne unique",
             lines_data=[
                 {"account": account_bank, "debit": Decimal("1000"), "credit": Decimal("0")},
-            ], actor=user,
+            ],
+            actor=user,
         )
 
 
@@ -255,26 +298,33 @@ def test_entry_requires_at_least_two_lines(cooperative, journal, account_bank, u
 def test_accounting_dashboard_kpis(cooperative, journal, account_bank, account_revenue, user):
     """Vérification des calculs des KPIs du tableau de bord comptable."""
     import datetime
+
     from apps.accounting.services import get_accounting_dashboard_kpis
 
     # Écriture brouillon
     create_accounting_entry(
-        cooperative=cooperative, journal=journal,
-        entry_date=datetime.date(2024, 1, 1), description="Brouillon",
+        cooperative=cooperative,
+        journal=journal,
+        entry_date=datetime.date(2024, 1, 1),
+        description="Brouillon",
         lines_data=[
             {"account": account_bank, "debit": Decimal("100"), "credit": Decimal("0")},
             {"account": account_revenue, "debit": Decimal("0"), "credit": Decimal("100")},
-        ], actor=user,
+        ],
+        actor=user,
     )
 
     # Écriture validée
     entry2 = create_accounting_entry(
-        cooperative=cooperative, journal=journal,
-        entry_date=datetime.date(2024, 1, 2), description="Vente",
+        cooperative=cooperative,
+        journal=journal,
+        entry_date=datetime.date(2024, 1, 2),
+        description="Vente",
         lines_data=[
             {"account": account_bank, "debit": Decimal("1500"), "credit": Decimal("0")},
             {"account": account_revenue, "debit": Decimal("0"), "credit": Decimal("1500")},
-        ], actor=user,
+        ],
+        actor=user,
     )
     post_entry(entry=entry2, actor=user)
 
@@ -286,18 +336,24 @@ def test_accounting_dashboard_kpis(cooperative, journal, account_bank, account_r
 
 
 @pytest.mark.django_db
-def test_financial_statements_cpc_and_bilan(cooperative, journal, account_bank, account_capital, account_revenue, user):
+def test_financial_statements_cpc_and_bilan(
+    cooperative, journal, account_bank, account_capital, account_revenue, user
+):
     """Vérification des états financiers CPC et Bilan."""
     import datetime
+
     from apps.accounting.services import get_financial_statements
 
     entry = create_accounting_entry(
-        cooperative=cooperative, journal=journal,
-        entry_date=datetime.date(2024, 1, 10), description="Vente marchandise",
+        cooperative=cooperative,
+        journal=journal,
+        entry_date=datetime.date(2024, 1, 10),
+        description="Vente marchandise",
         lines_data=[
             {"account": account_bank, "debit": Decimal("3000"), "credit": Decimal("0")},
             {"account": account_revenue, "debit": Decimal("0"), "credit": Decimal("3000")},
-        ], actor=user,
+        ],
+        actor=user,
     )
     post_entry(entry=entry, actor=user)
 
@@ -316,4 +372,3 @@ def test_accountant_role_has_accounting_permissions():
     assert has_permission(UserRole.ACCOUNTANT, "accounting.view") is True
     assert has_permission(UserRole.ACCOUNTANT, "accounting.edit") is True
     assert has_permission(UserRole.ACCOUNTANT, "accounting.post") is True
-

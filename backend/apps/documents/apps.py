@@ -6,6 +6,7 @@ permet de personnaliser chaque type de document par coopérative (en-tête,
 pied, conditions, couleur d'accent, logo) via `DocumentTemplate`, et archive
 les documents générés dans `DocumentArchive` pour re-téléchargement ultérieur.
 """
+
 from django.apps import AppConfig
 
 

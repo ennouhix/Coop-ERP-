@@ -9,9 +9,10 @@ lourdes) ni django-parler (table séparée -> jointures coûteuses sur catalogue
 volumineux). Un JSONField avec fallback applicatif est plus simple, plus
 rapide, et prêt pour une 3e langue (anglais) sans migration.
 """
+
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -33,7 +34,7 @@ class TranslatedField(models.JSONField):
             raise ValidationError(f"Langues non supportées : {invalid_keys}")
 
 
-def get_translated_value(field_value: Optional[dict], lang: str) -> str:
+def get_translated_value(field_value: dict | None, lang: str) -> str:
     """
     Récupère la valeur traduite avec fallback :
     langue demandée -> langue par défaut -> première valeur disponible -> "".

@@ -5,12 +5,16 @@ Chaque document est archivé dans DocumentArchive pour permettre un
 re-téléchargement identique (copie figée) même si la commande source
 évolue ensuite (livraison partielle supplémentaire, etc.).
 """
+
 from __future__ import annotations
 
 from apps.audit.services import log_activity
 from apps.documents import pdf
 from apps.documents.models import (
-    DocumentArchive, DocumentSourceType, DocumentTemplateType, is_valid_source_id,
+    DocumentArchive,
+    DocumentSourceType,
+    DocumentTemplateType,
+    is_valid_source_id,
 )
 
 
@@ -38,7 +42,9 @@ def generate_document(order, doc_type: str, *, actor, regenerate: bool = False) 
     source_number = order.order_number
 
     existing = DocumentArchive.objects.filter(
-        cooperative=order.cooperative, doc_type=doc_type, source_id=source_id,
+        cooperative=order.cooperative,
+        doc_type=doc_type,
+        source_id=source_id,
     ).first()
     if existing and not regenerate:
         return existing
@@ -61,18 +67,28 @@ def generate_document(order, doc_type: str, *, actor, regenerate: bool = False) 
         archive = existing
     else:
         archive = DocumentArchive(
-            cooperative=order.cooperative, doc_type=doc_type,
-            source_type=source_type, source_id=source_id,
-            source_number=source_number, filename=filename, created_by=actor,
+            cooperative=order.cooperative,
+            doc_type=doc_type,
+            source_type=source_type,
+            source_id=source_id,
+            source_number=source_number,
+            filename=filename,
+            created_by=actor,
         )
         archive.pdf_file.save(filename, buffer, save=False)
         archive.save()
 
     log_activity(
-        cooperative=order.cooperative, actor=actor,
+        cooperative=order.cooperative,
+        actor=actor,
         action="document.generated" if not existing else "document.regenerated",
-        target_type="DocumentArchive", target_id=archive.id,
+        target_type="DocumentArchive",
+        target_id=archive.id,
         target_repr=f"{archive.get_doc_type_display()} {source_number}",
-        metadata={"doc_type": doc_type, "source_number": source_number, "regenerate": bool(regenerate)},
+        metadata={
+            "doc_type": doc_type,
+            "source_number": source_number,
+            "regenerate": bool(regenerate),
+        },
     )
     return archive

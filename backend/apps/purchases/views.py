@@ -8,6 +8,7 @@ Endpoints :
 - POST      /api/v1/purchases/orders/{id}/receive/   -> réception (purchases.receive)
 - POST      /api/v1/purchases/orders/{id}/cancel/    -> annulation (purchases.edit)
 """
+
 from __future__ import annotations
 
 from django.shortcuts import get_object_or_404
@@ -22,7 +23,7 @@ from apps.authentication.permissions import IsCooperativeMember
 from apps.catalog.models import Product
 from apps.partners.models import Partner
 from apps.purchases import services
-from apps.purchases.models import PurchaseOrder, PurchaseOrderStatus
+from apps.purchases.models import PurchaseOrder
 from apps.purchases.serializers import (
     PurchaseOrderCreateSerializer,
     PurchaseOrderSerializer,
@@ -38,7 +39,11 @@ class PurchaseOrderListCreateView(generics.ListCreateAPIView):
     ordering_fields = ["order_date", "created_at"]
 
     def get_queryset(self):  # noqa: ANN201
-        return PurchaseOrder.objects.select_related("supplier", "warehouse").prefetch_related("lines__product").all()
+        return (
+            PurchaseOrder.objects.select_related("supplier", "warehouse")
+            .prefetch_related("lines__product")
+            .all()
+        )
 
     def get_permissions(self):  # noqa: ANN201
         base = [IsAuthenticated(), IsCooperativeMember()]
@@ -47,7 +52,11 @@ class PurchaseOrderListCreateView(generics.ListCreateAPIView):
         return base
 
     def get_serializer_class(self):  # noqa: ANN201
-        return PurchaseOrderCreateSerializer if self.request.method == "POST" else PurchaseOrderSerializer
+        return (
+            PurchaseOrderCreateSerializer
+            if self.request.method == "POST"
+            else PurchaseOrderSerializer
+        )
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         serializer = PurchaseOrderCreateSerializer(data=request.data)
@@ -56,20 +65,32 @@ class PurchaseOrderListCreateView(generics.ListCreateAPIView):
         cooperative_id = request.user.cooperative_id
 
         supplier = get_object_or_404(Partner, pk=data["supplier_id"], cooperative_id=cooperative_id)
-        warehouse = get_object_or_404(Warehouse, pk=data["warehouse_id"], cooperative_id=cooperative_id)
+        warehouse = get_object_or_404(
+            Warehouse, pk=data["warehouse_id"], cooperative_id=cooperative_id
+        )
 
         resolved_lines = []
         for line in data["lines"]:
-            product = get_object_or_404(Product, pk=line["product_id"], cooperative_id=cooperative_id)
+            product = get_object_or_404(
+                Product, pk=line["product_id"], cooperative_id=cooperative_id
+            )
             resolved_lines.append(
-                {"product": product, "quantity_ordered": line["quantity_ordered"], "unit_price": line["unit_price"]}
+                {
+                    "product": product,
+                    "quantity_ordered": line["quantity_ordered"],
+                    "unit_price": line["unit_price"],
+                }
             )
 
         try:
             order = services.create_purchase_order(
-                cooperative=request.user.cooperative, supplier=supplier, warehouse=warehouse,
-                lines=resolved_lines, actor=request.user,
-                order_date=data["order_date"], expected_delivery_date=data.get("expected_delivery_date"),
+                cooperative=request.user.cooperative,
+                supplier=supplier,
+                warehouse=warehouse,
+                lines=resolved_lines,
+                actor=request.user,
+                order_date=data["order_date"],
+                expected_delivery_date=data.get("expected_delivery_date"),
                 notes=data["notes"],
             )
         except services.PurchaseOrderError as exc:
@@ -83,14 +104,20 @@ class PurchaseOrderDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("purchases.view")]
 
     def get_queryset(self):  # noqa: ANN201
-        return PurchaseOrder.objects.select_related("supplier", "warehouse").prefetch_related("lines__product").all()
+        return (
+            PurchaseOrder.objects.select_related("supplier", "warehouse")
+            .prefetch_related("lines__product")
+            .all()
+        )
 
 
 class PurchaseOrderConfirmView(APIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("purchases.edit")]
 
     def post(self, request: Request, order_id: str) -> Response:
-        order = get_object_or_404(PurchaseOrder, pk=order_id, cooperative_id=request.user.cooperative_id)
+        order = get_object_or_404(
+            PurchaseOrder, pk=order_id, cooperative_id=request.user.cooperative_id
+        )
         try:
             services.confirm_purchase_order(order=order, actor=request.user)
         except services.PurchaseOrderError as exc:
@@ -102,7 +129,9 @@ class PurchaseOrderCancelView(APIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("purchases.edit")]
 
     def post(self, request: Request, order_id: str) -> Response:
-        order = get_object_or_404(PurchaseOrder, pk=order_id, cooperative_id=request.user.cooperative_id)
+        order = get_object_or_404(
+            PurchaseOrder, pk=order_id, cooperative_id=request.user.cooperative_id
+        )
         try:
             services.cancel_purchase_order(order=order, actor=request.user)
         except services.PurchaseOrderError as exc:
@@ -111,10 +140,16 @@ class PurchaseOrderCancelView(APIView):
 
 
 class PurchaseOrderReceiveView(APIView):
-    permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("purchases.receive")]
+    permission_classes = [
+        IsAuthenticated,
+        IsCooperativeMember,
+        RequirePermission("purchases.receive"),
+    ]
 
     def post(self, request: Request, order_id: str) -> Response:
-        order = get_object_or_404(PurchaseOrder, pk=order_id, cooperative_id=request.user.cooperative_id)
+        order = get_object_or_404(
+            PurchaseOrder, pk=order_id, cooperative_id=request.user.cooperative_id
+        )
         serializer = PurchaseReceiptSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

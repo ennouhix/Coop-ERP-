@@ -7,12 +7,12 @@ dans LA MÊME TRANSACTION. Si l'un des deux échoue, aucun des deux ne doit
 persister — sinon on se retrouve avec une commande qui dit "reçu" sans
 stock physique, ou l'inverse.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Optional
 
 from django.db import transaction
 
@@ -60,8 +60,15 @@ def _generate_order_number(cooperative: Cooperative) -> str:
 
 @transaction.atomic
 def create_purchase_order(
-    *, cooperative: Cooperative, supplier: Partner, warehouse: Warehouse, lines: list, actor,  # noqa: ANN001
-    order_date: date, expected_delivery_date: Optional[date] = None, notes: str = "",
+    *,
+    cooperative: Cooperative,
+    supplier: Partner,
+    warehouse: Warehouse,
+    lines: list,
+    actor,  # noqa: ANN001
+    order_date: date,
+    expected_delivery_date: date | None = None,
+    notes: str = "",
 ) -> PurchaseOrder:
     if not supplier.is_supplier:
         raise PurchaseOrderError("Ce partenaire n'est pas enregistré comme fournisseur.")
@@ -71,17 +78,23 @@ def create_purchase_order(
     order = PurchaseOrder.objects.create(
         cooperative=cooperative,
         order_number=_generate_order_number(cooperative),
-        supplier=supplier, warehouse=warehouse,
+        supplier=supplier,
+        warehouse=warehouse,
         status=PurchaseOrderStatus.DRAFT,
-        order_date=order_date, expected_delivery_date=expected_delivery_date,
-        notes=notes, created_by=actor,
+        order_date=order_date,
+        expected_delivery_date=expected_delivery_date,
+        notes=notes,
+        created_by=actor,
     )
 
     for line in lines:
         PurchaseOrderLine.objects.create(
-            cooperative=cooperative, purchase_order=order,
-            product=line["product"], quantity_ordered=line["quantity_ordered"],
-            unit_price=line["unit_price"], created_by=actor,
+            cooperative=cooperative,
+            purchase_order=order,
+            product=line["product"],
+            quantity_ordered=line["quantity_ordered"],
+            unit_price=line["unit_price"],
+            created_by=actor,
         )
 
     return order
@@ -97,8 +110,12 @@ def confirm_purchase_order(*, order: PurchaseOrder, actor) -> PurchaseOrder:  # 
     order.save(update_fields=["status", "updated_by"])
 
     log_activity(
-        cooperative=order.cooperative, actor=actor, action="purchase_order.confirmed",
-        target_type="PurchaseOrder", target_id=order.id, target_repr=order.order_number,
+        cooperative=order.cooperative,
+        actor=actor,
+        action="purchase_order.confirmed",
+        target_type="PurchaseOrder",
+        target_id=order.id,
+        target_repr=order.order_number,
     )
     return order
 
@@ -106,17 +123,25 @@ def confirm_purchase_order(*, order: PurchaseOrder, actor) -> PurchaseOrder:  # 
 @transaction.atomic
 def cancel_purchase_order(*, order: PurchaseOrder, actor) -> PurchaseOrder:  # noqa: ANN001
     if order.status not in {PurchaseOrderStatus.DRAFT, PurchaseOrderStatus.CONFIRMED}:
-        raise PurchaseOrderError("Cette commande ne peut plus être annulée (déjà reçue ou annulée).")
+        raise PurchaseOrderError(
+            "Cette commande ne peut plus être annulée (déjà reçue ou annulée)."
+        )
     if order.has_any_receipt:
-        raise PurchaseOrderError("Impossible d'annuler une commande déjà partiellement réceptionnée.")
+        raise PurchaseOrderError(
+            "Impossible d'annuler une commande déjà partiellement réceptionnée."
+        )
 
     order.status = PurchaseOrderStatus.CANCELLED
     order.updated_by = actor
     order.save(update_fields=["status", "updated_by"])
 
     log_activity(
-        cooperative=order.cooperative, actor=actor, action="purchase_order.cancelled",
-        target_type="PurchaseOrder", target_id=order.id, target_repr=order.order_number,
+        cooperative=order.cooperative,
+        actor=actor,
+        action="purchase_order.cancelled",
+        target_type="PurchaseOrder",
+        target_id=order.id,
+        target_repr=order.order_number,
     )
     return order
 
@@ -149,8 +174,12 @@ def record_purchase_receipt(*, order: PurchaseOrder, actor, receipts: list) -> P
             )
 
         inventory_services.record_stock_in(
-            product=line.product, warehouse=order.warehouse, quantity=quantity, actor=actor,
-            reason=StockMovementReason.PURCHASE, reference=order.order_number,
+            product=line.product,
+            warehouse=order.warehouse,
+            quantity=quantity,
+            actor=actor,
+            reason=StockMovementReason.PURCHASE,
+            reference=order.order_number,
             notes=f"Réception commande {order.order_number}",
         )
 
@@ -158,13 +187,26 @@ def record_purchase_receipt(*, order: PurchaseOrder, actor, receipts: list) -> P
         line.save(update_fields=["quantity_received"])
 
     order.refresh_from_db()
-    order.status = PurchaseOrderStatus.RECEIVED if order.is_fully_received else PurchaseOrderStatus.PARTIALLY_RECEIVED
+    order.status = (
+        PurchaseOrderStatus.RECEIVED
+        if order.is_fully_received
+        else PurchaseOrderStatus.PARTIALLY_RECEIVED
+    )
     order.updated_by = actor
     order.save(update_fields=["status", "updated_by"])
 
     log_activity(
-        cooperative=order.cooperative, actor=actor, action="purchase_order.received",
-        target_type="PurchaseOrder", target_id=order.id, target_repr=order.order_number,
-        metadata={"receipts": [{"line_id": str(r["line_id"]), "quantity": str(r["quantity"])} for r in receipts], "new_status": order.status},
+        cooperative=order.cooperative,
+        actor=actor,
+        action="purchase_order.received",
+        target_type="PurchaseOrder",
+        target_id=order.id,
+        target_repr=order.order_number,
+        metadata={
+            "receipts": [
+                {"line_id": str(r["line_id"]), "quantity": str(r["quantity"])} for r in receipts
+            ],
+            "new_status": order.status,
+        },
     )
     return order

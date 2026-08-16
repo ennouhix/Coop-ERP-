@@ -1,4 +1,5 @@
 """Serializer de sortie du tableau de bord (documente la structure pour Swagger)."""
+
 from __future__ import annotations
 
 from rest_framework import serializers

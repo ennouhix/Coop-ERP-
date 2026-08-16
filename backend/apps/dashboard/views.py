@@ -5,6 +5,7 @@ Endpoint :
 - GET /api/v1/dashboard/summary/?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
   Sans paramètres : période par défaut = mois courant.
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -27,7 +28,9 @@ class DashboardSummaryView(APIView):
         date_from = self._parse_date(request.query_params.get("date_from"))
         date_to = self._parse_date(request.query_params.get("date_to"))
 
-        summary = get_dashboard_summary(cooperative=request.user.cooperative, date_from=date_from, date_to=date_to)
+        summary = get_dashboard_summary(
+            cooperative=request.user.cooperative, date_from=date_from, date_to=date_to
+        )
         return Response(DashboardSummarySerializer(summary).data)
 
     @staticmethod

@@ -7,6 +7,7 @@ modèle `Permission` granulaire par module/action ; ces classes resteront
 valides comme garde-fous de haut niveau (ex: "il faut au moins être admin
 pour accéder à cette vue") au-dessus des permissions fines.
 """
+
 from __future__ import annotations
 
 from rest_framework.permissions import BasePermission
@@ -15,7 +16,7 @@ from rest_framework.views import APIView
 
 
 class IsCooperativeMember(BasePermission):
-    """Refuse l'accès à tout utilisateur non rattaché à une coopérative (ex: superadmin plateforme sans contexte)."""
+    """Refuse l'accès à tout utilisateur non rattaché à une coopérative."""
 
     message = "Vous devez appartenir à une coopérative pour accéder à cette ressource."
 
@@ -24,7 +25,7 @@ class IsCooperativeMember(BasePermission):
 
 
 class IsOwnerOrAdmin(BasePermission):
-    """Réservé aux rôles OWNER et ADMIN de la coopérative (gestion d'équipe, paramètres sensibles)."""
+    """Réservé aux rôles OWNER et ADMIN de la coopérative."""
 
     message = "Action réservée aux propriétaires et administrateurs de la coopérative."
 

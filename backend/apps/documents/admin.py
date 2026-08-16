@@ -1,6 +1,7 @@
 """
 Configuration du module documents.
 """
+
 from django.contrib import admin
 
 from apps.documents.models import DocumentArchive, DocumentTemplate

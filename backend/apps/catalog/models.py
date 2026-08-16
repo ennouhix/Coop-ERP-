@@ -4,6 +4,7 @@ Modèles du catalogue : unités de mesure, catégories hiérarchiques, produits.
 Product.name et Category.name utilisent TranslatedField (apps.core.fields),
 conçu à l'Epic 0 pour le contenu bilingue FR/AR saisi par l'utilisateur.
 """
+
 from __future__ import annotations
 
 from django.core.exceptions import ValidationError
@@ -36,7 +37,9 @@ class Unit(TenantBaseModel):
         verbose_name_plural = "Unités"
         ordering = ["name"]
         constraints = [
-            models.UniqueConstraint(fields=["cooperative", "symbol"], name="unique_unit_symbol_per_cooperative"),
+            models.UniqueConstraint(
+                fields=["cooperative", "symbol"], name="unique_unit_symbol_per_cooperative"
+            ),
         ]
 
     def __str__(self) -> str:
@@ -85,13 +88,17 @@ class Product(TenantBaseModel):
     barcode = models.CharField(max_length=50, blank=True)
 
     name = TranslatedField(help_text='Ex: {"fr": "Huile d\'argane", "ar": "زيت الأركان"}')
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name="products")
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True, blank=True, related_name="products"
+    )
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, related_name="products")
 
     reference_purchase_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     reference_sale_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     minimum_stock_threshold = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
+        max_digits=12,
+        decimal_places=2,
+        default=0,
         help_text="Seuil utilisé par le module Stock (Epic 8) pour déclencher une alerte.",
     )
 
@@ -104,7 +111,9 @@ class Product(TenantBaseModel):
         verbose_name_plural = "Produits"
         ordering = ["sku"]
         constraints = [
-            models.UniqueConstraint(fields=["cooperative", "sku"], name="unique_product_sku_per_cooperative"),
+            models.UniqueConstraint(
+                fields=["cooperative", "sku"], name="unique_product_sku_per_cooperative"
+            ),
             models.UniqueConstraint(
                 fields=["cooperative", "barcode"],
                 condition=~models.Q(barcode=""),

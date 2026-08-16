@@ -5,6 +5,7 @@ StockMovement = ledger immuable (source de vérité, jamais modifié/supprimé).
 StockLevel = cache dénormalisé de la quantité actuelle, mis à jour de façon
 atomique par apps.inventory.services à chaque mouvement.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -35,8 +36,12 @@ class StockMovementReason(models.TextChoices):
 class StockLevel(TenantBaseModel):
     """Quantité actuelle d'un produit dans un entrepôt (cache dénormalisé)."""
 
-    product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT, related_name="stock_levels")
-    warehouse = models.ForeignKey("warehouses.Warehouse", on_delete=models.PROTECT, related_name="stock_levels")
+    product = models.ForeignKey(
+        "catalog.Product", on_delete=models.PROTECT, related_name="stock_levels"
+    )
+    warehouse = models.ForeignKey(
+        "warehouses.Warehouse", on_delete=models.PROTECT, related_name="stock_levels"
+    )
     quantity = models.DecimalField(max_digits=14, decimal_places=3, default=Decimal("0"))
 
     class Meta:
@@ -45,9 +50,12 @@ class StockLevel(TenantBaseModel):
         ordering = ["product__sku", "warehouse__code"]
         constraints = [
             models.UniqueConstraint(
-                fields=["cooperative", "product", "warehouse"], name="unique_stock_level_per_product_warehouse"
+                fields=["cooperative", "product", "warehouse"],
+                name="unique_stock_level_per_product_warehouse",
             ),
-            models.CheckConstraint(condition=models.Q(quantity__gte=0), name="stock_level_quantity_never_negative"),
+            models.CheckConstraint(
+                condition=models.Q(quantity__gte=0), name="stock_level_quantity_never_negative"
+            ),
         ]
         indexes = [models.Index(fields=["cooperative", "product"])]
 
@@ -64,20 +72,36 @@ class StockMovement(TenantBaseModel):
     """
 
     movement_type = models.CharField(max_length=10, choices=StockMovementType.choices)
-    reason = models.CharField(max_length=20, choices=StockMovementReason.choices, default=StockMovementReason.OTHER)
+    reason = models.CharField(
+        max_length=20, choices=StockMovementReason.choices, default=StockMovementReason.OTHER
+    )
 
-    product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT, related_name="stock_movements")
+    product = models.ForeignKey(
+        "catalog.Product", on_delete=models.PROTECT, related_name="stock_movements"
+    )
     warehouse = models.ForeignKey(
-        "warehouses.Warehouse", on_delete=models.PROTECT, related_name="stock_movements_out",
+        "warehouses.Warehouse",
+        on_delete=models.PROTECT,
+        related_name="stock_movements_out",
         help_text="Entrepôt source (IN/OUT/ADJUSTMENT) ou entrepôt de départ (TRANSFER).",
     )
     destination_warehouse = models.ForeignKey(
-        "warehouses.Warehouse", on_delete=models.PROTECT, null=True, blank=True,
-        related_name="stock_movements_in", help_text="Renseigné uniquement pour un TRANSFER.",
+        "warehouses.Warehouse",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="stock_movements_in",
+        help_text="Renseigné uniquement pour un TRANSFER.",
     )
 
-    quantity = models.DecimalField(max_digits=14, decimal_places=3, help_text="Toujours positive ; le sens est donné par movement_type.")
-    reference = models.CharField(max_length=100, blank=True, help_text="Ex: numéro de bon de réception.")
+    quantity = models.DecimalField(
+        max_digits=14,
+        decimal_places=3,
+        help_text="Toujours positive ; le sens est donné par movement_type.",
+    )
+    reference = models.CharField(
+        max_length=100, blank=True, help_text="Ex: numéro de bon de réception."
+    )
     notes = models.TextField(blank=True)
 
     class Meta:
@@ -85,7 +109,9 @@ class StockMovement(TenantBaseModel):
         verbose_name_plural = "Mouvements de stock"
         ordering = ["-created_at"]
         constraints = [
-            models.CheckConstraint(condition=models.Q(quantity__gt=0), name="stock_movement_quantity_positive"),
+            models.CheckConstraint(
+                condition=models.Q(quantity__gt=0), name="stock_movement_quantity_positive"
+            ),
         ]
         indexes = [
             models.Index(fields=["cooperative", "product", "warehouse"]),

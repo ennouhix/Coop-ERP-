@@ -8,6 +8,7 @@ plusieurs lignes existent pour un couple (cooperative, role), elles
 remplacent intégralement la matrice pour ce rôle ; sinon la matrice
 s'applique. L'OWNER conserve toujours un accès complet ("*").
 """
+
 from __future__ import annotations
 
 from django.db import models

@@ -6,6 +6,7 @@ Payment liés (jamais stockés en cache dénormalisé ici, contrairement à
 StockLevel à l'Epic 8) : le volume de paiements par facture reste faible,
 la simplicité l'emporte sur l'optimisation prématurée.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -36,11 +37,15 @@ class Invoice(TenantBaseModel):
     """Une facture émise à un client, optionnellement issue d'une commande de vente."""
 
     invoice_number = models.CharField(max_length=20, db_index=True, editable=False)
-    customer = models.ForeignKey("partners.Partner", on_delete=models.PROTECT, related_name="invoices")
+    customer = models.ForeignKey(
+        "partners.Partner", on_delete=models.PROTECT, related_name="invoices"
+    )
     sales_order = models.ForeignKey(
         "sales.SalesOrder", on_delete=models.PROTECT, null=True, blank=True, related_name="invoices"
     )
-    status = models.CharField(max_length=20, choices=InvoiceStatus.choices, default=InvoiceStatus.DRAFT)
+    status = models.CharField(
+        max_length=20, choices=InvoiceStatus.choices, default=InvoiceStatus.DRAFT
+    )
 
     issue_date = models.DateField()
     due_date = models.DateField()
@@ -51,7 +56,10 @@ class Invoice(TenantBaseModel):
         verbose_name_plural = "Factures"
         ordering = ["-issue_date", "-created_at"]
         constraints = [
-            models.UniqueConstraint(fields=["cooperative", "invoice_number"], name="unique_invoice_number_per_cooperative"),
+            models.UniqueConstraint(
+                fields=["cooperative", "invoice_number"],
+                name="unique_invoice_number_per_cooperative",
+            ),
         ]
         indexes = [models.Index(fields=["cooperative", "status"])]
 
@@ -83,8 +91,14 @@ class InvoiceLine(TenantBaseModel):
     """Une ligne de facture."""
 
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="lines")
-    product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT, related_name="invoice_lines")
-    description = models.CharField(max_length=255, blank=True, help_text="Libellé optionnel, sinon le nom du produit est utilisé.")
+    product = models.ForeignKey(
+        "catalog.Product", on_delete=models.PROTECT, related_name="invoice_lines"
+    )
+    description = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Libellé optionnel, sinon le nom du produit est utilisé.",
+    )
 
     quantity = models.DecimalField(max_digits=14, decimal_places=3)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
@@ -93,7 +107,9 @@ class InvoiceLine(TenantBaseModel):
         verbose_name = "Ligne de facture"
         verbose_name_plural = "Lignes de facture"
         constraints = [
-            models.CheckConstraint(condition=models.Q(quantity__gt=0), name="invoice_line_quantity_positive"),
+            models.CheckConstraint(
+                condition=models.Q(quantity__gt=0), name="invoice_line_quantity_positive"
+            ),
         ]
 
     def __str__(self) -> str:
@@ -113,8 +129,12 @@ class Payment(TenantBaseModel):
     invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, related_name="payments")
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     payment_date = models.DateField()
-    payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH)
-    reference = models.CharField(max_length=100, blank=True, help_text="N° de chèque, référence de virement...")
+    payment_method = models.CharField(
+        max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH
+    )
+    reference = models.CharField(
+        max_length=100, blank=True, help_text="N° de chèque, référence de virement..."
+    )
     notes = models.TextField(blank=True)
 
     class Meta:
@@ -122,7 +142,9 @@ class Payment(TenantBaseModel):
         verbose_name_plural = "Paiements"
         ordering = ["-payment_date", "-created_at"]
         constraints = [
-            models.CheckConstraint(condition=models.Q(amount__gt=0), name="payment_amount_positive"),
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0), name="payment_amount_positive"
+            ),
         ]
 
     def __str__(self) -> str:

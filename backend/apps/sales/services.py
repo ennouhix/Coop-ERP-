@@ -6,12 +6,12 @@ appelle apps.inventory.services.record_stock_out() dans LA MÊME
 TRANSACTION — le stock ne doit jamais être décrémenté sans que la ligne
 de commande reflète la même quantité livrée, et inversement.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Optional
 
 from django.db import transaction
 
@@ -57,7 +57,9 @@ def _generate_order_number(cooperative: Cooperative) -> str:
     return f"SO-{str(next_sequence).zfill(ORDER_NUMBER_PADDING)}"
 
 
-def _compute_outstanding_balance(customer: Partner, *, exclude_order_id: Optional[str] = None) -> Decimal:
+def _compute_outstanding_balance(
+    customer: Partner, *, exclude_order_id: str | None = None
+) -> Decimal:
     """
     Approximation V1 de l'encours client : somme des commandes non
     annulées et non totalement soldées. À remplacer par l'encours facturé
@@ -66,7 +68,11 @@ def _compute_outstanding_balance(customer: Partner, *, exclude_order_id: Optiona
     """
     orders = SalesOrder.objects.filter(
         customer=customer,
-        status__in=[SalesOrderStatus.CONFIRMED, SalesOrderStatus.PARTIALLY_DELIVERED, SalesOrderStatus.DELIVERED],
+        status__in=[
+            SalesOrderStatus.CONFIRMED,
+            SalesOrderStatus.PARTIALLY_DELIVERED,
+            SalesOrderStatus.DELIVERED,
+        ],
     )
     if exclude_order_id:
         orders = orders.exclude(pk=exclude_order_id)
@@ -75,8 +81,15 @@ def _compute_outstanding_balance(customer: Partner, *, exclude_order_id: Optiona
 
 @transaction.atomic
 def create_sales_order(
-    *, cooperative: Cooperative, customer: Partner, warehouse: Warehouse, lines: list, actor,  # noqa: ANN001
-    order_date: date, expected_delivery_date: Optional[date] = None, notes: str = "",
+    *,
+    cooperative: Cooperative,
+    customer: Partner,
+    warehouse: Warehouse,
+    lines: list,
+    actor,  # noqa: ANN001
+    order_date: date,
+    expected_delivery_date: date | None = None,
+    notes: str = "",
 ) -> SalesOrder:
     if not customer.is_customer:
         raise SalesOrderError("Ce partenaire n'est pas enregistré comme client.")
@@ -86,17 +99,23 @@ def create_sales_order(
     order = SalesOrder.objects.create(
         cooperative=cooperative,
         order_number=_generate_order_number(cooperative),
-        customer=customer, warehouse=warehouse,
+        customer=customer,
+        warehouse=warehouse,
         status=SalesOrderStatus.DRAFT,
-        order_date=order_date, expected_delivery_date=expected_delivery_date,
-        notes=notes, created_by=actor,
+        order_date=order_date,
+        expected_delivery_date=expected_delivery_date,
+        notes=notes,
+        created_by=actor,
     )
 
     for line in lines:
         SalesOrderLine.objects.create(
-            cooperative=cooperative, sales_order=order,
-            product=line["product"], quantity_ordered=line["quantity_ordered"],
-            unit_price=line["unit_price"], created_by=actor,
+            cooperative=cooperative,
+            sales_order=order,
+            product=line["product"],
+            quantity_ordered=line["quantity_ordered"],
+            unit_price=line["unit_price"],
+            created_by=actor,
         )
 
     return order
@@ -121,8 +140,12 @@ def confirm_sales_order(*, order: SalesOrder, actor) -> SalesOrder:  # noqa: ANN
     order.save(update_fields=["status", "updated_by"])
 
     log_activity(
-        cooperative=order.cooperative, actor=actor, action="sales_order.confirmed",
-        target_type="SalesOrder", target_id=order.id, target_repr=order.order_number,
+        cooperative=order.cooperative,
+        actor=actor,
+        action="sales_order.confirmed",
+        target_type="SalesOrder",
+        target_id=order.id,
+        target_repr=order.order_number,
     )
     return order
 
@@ -139,8 +162,12 @@ def cancel_sales_order(*, order: SalesOrder, actor) -> SalesOrder:  # noqa: ANN0
     order.save(update_fields=["status", "updated_by"])
 
     log_activity(
-        cooperative=order.cooperative, actor=actor, action="sales_order.cancelled",
-        target_type="SalesOrder", target_id=order.id, target_repr=order.order_number,
+        cooperative=order.cooperative,
+        actor=actor,
+        action="sales_order.cancelled",
+        target_type="SalesOrder",
+        target_id=order.id,
+        target_repr=order.order_number,
     )
     return order
 
@@ -173,8 +200,12 @@ def record_sales_delivery(*, order: SalesOrder, actor, deliveries: list) -> Sale
 
         try:
             inventory_services.record_stock_out(
-                product=line.product, warehouse=order.warehouse, quantity=quantity, actor=actor,
-                reason=StockMovementReason.SALE, reference=order.order_number,
+                product=line.product,
+                warehouse=order.warehouse,
+                quantity=quantity,
+                actor=actor,
+                reason=StockMovementReason.SALE,
+                reference=order.order_number,
                 notes=f"Livraison commande {order.order_number}",
             )
         except inventory_services.InsufficientStockError as exc:
@@ -184,13 +215,26 @@ def record_sales_delivery(*, order: SalesOrder, actor, deliveries: list) -> Sale
         line.save(update_fields=["quantity_delivered"])
 
     order.refresh_from_db()
-    order.status = SalesOrderStatus.DELIVERED if order.is_fully_delivered else SalesOrderStatus.PARTIALLY_DELIVERED
+    order.status = (
+        SalesOrderStatus.DELIVERED
+        if order.is_fully_delivered
+        else SalesOrderStatus.PARTIALLY_DELIVERED
+    )
     order.updated_by = actor
     order.save(update_fields=["status", "updated_by"])
 
     log_activity(
-        cooperative=order.cooperative, actor=actor, action="sales_order.delivered",
-        target_type="SalesOrder", target_id=order.id, target_repr=order.order_number,
-        metadata={"deliveries": [{"line_id": str(d["line_id"]), "quantity": str(d["quantity"])} for d in deliveries], "new_status": order.status},
+        cooperative=order.cooperative,
+        actor=actor,
+        action="sales_order.delivered",
+        target_type="SalesOrder",
+        target_id=order.id,
+        target_repr=order.order_number,
+        metadata={
+            "deliveries": [
+                {"line_id": str(d["line_id"]), "quantity": str(d["quantity"])} for d in deliveries
+            ],
+            "new_status": order.status,
+        },
     )
     return order

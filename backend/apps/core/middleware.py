@@ -6,9 +6,10 @@ apps.core.authentication.TenantAwareJWTAuthentication, exécutée par DRF
 au moment de l'authentification (voir ce fichier pour le détail du bug
 que ce changement corrige).
 """
+
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from django.http import HttpRequest, HttpResponse
 

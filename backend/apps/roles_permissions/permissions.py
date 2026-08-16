@@ -12,6 +12,7 @@ instanciable par DRF), car DRF instancie les permission_classes sans
 argument — le pattern factory permet de paramétrer le code malgré cette
 contrainte.
 """
+
 from __future__ import annotations
 
 from rest_framework.permissions import BasePermission

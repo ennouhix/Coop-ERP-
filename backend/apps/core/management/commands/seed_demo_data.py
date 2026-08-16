@@ -14,6 +14,7 @@ commande est un utilisateur de l'API interne comme un autre. Seule
 exception : les comptes/journaux PCM (plan comptable marocain), qui n'ont
 pas de service dédié et sont créés directement comme dans `load_pcm`.
 """
+
 # ruff: noqa: E501 — les lignes de données (noms FR/AR, lignes de commande)
 # dépassent naturellement 100 caractères ; on privilégie la lisibilité.
 from __future__ import annotations
@@ -61,7 +62,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser) -> None:  # noqa: ANN001
         parser.add_argument(
-            "--reset", action="store_true",
+            "--reset",
+            action="store_true",
             help="Supprime la coopérative de démo existante (et toutes ses données) avant de la recréer.",
         )
 
@@ -115,16 +117,31 @@ class Command(BaseCommand):
 
     def _create_team(self, cooperative: Cooperative):
         admin = User.objects.create_user(
-            username="admin@demo.ma", email="admin@demo.ma", password=DEMO_PASSWORD,
-            first_name="Karim", last_name="Bennani", cooperative=cooperative, role=UserRole.ADMIN,
+            username="admin@demo.ma",
+            email="admin@demo.ma",
+            password=DEMO_PASSWORD,
+            first_name="Karim",
+            last_name="Bennani",
+            cooperative=cooperative,
+            role=UserRole.ADMIN,
         )
         staff = User.objects.create_user(
-            username="staff@demo.ma", email="staff@demo.ma", password=DEMO_PASSWORD,
-            first_name="Yassine", last_name="Ouazzani", cooperative=cooperative, role=UserRole.STAFF,
+            username="staff@demo.ma",
+            email="staff@demo.ma",
+            password=DEMO_PASSWORD,
+            first_name="Yassine",
+            last_name="Ouazzani",
+            cooperative=cooperative,
+            role=UserRole.STAFF,
         )
         accountant = User.objects.create_user(
-            username="accountant@demo.ma", email="accountant@demo.ma", password=DEMO_PASSWORD,
-            first_name="Salma", last_name="Idrissi", cooperative=cooperative, role=UserRole.ACCOUNTANT,
+            username="accountant@demo.ma",
+            email="accountant@demo.ma",
+            password=DEMO_PASSWORD,
+            first_name="Salma",
+            last_name="Idrissi",
+            cooperative=cooperative,
+            role=UserRole.ACCOUNTANT,
         )
         self.stdout.write(self.style.SUCCESS("✓ Équipe créée (owner, admin, staff, accountant)"))
         return admin, staff, accountant
@@ -150,148 +167,258 @@ class Command(BaseCommand):
             ("Said", "Mernissi", "0675678901", "WX567890", "Agadir", MemberStatus.INACTIVE, 3),
             ("Malika", "Idrissi", "0676789012", "XY678901", "Tiznit", MemberStatus.ACTIVE, 8),
             ("Driss", "Boumediene", "0677890123", "YZ789012", "Agadir", MemberStatus.SUSPENDED, 2),
-            ("Fatima Zahra", "Lamrani", "0678901234", "ZA890123", "Sidi Ifni", MemberStatus.INACTIVE, 5),
+            (
+                "Fatima Zahra",
+                "Lamrani",
+                "0678901234",
+                "ZA890123",
+                "Sidi Ifni",
+                MemberStatus.INACTIVE,
+                5,
+            ),
         ]
-        for index, (first_name, last_name, phone, cin, city, status, shares) in enumerate(members_data):
+        for index, (first_name, last_name, phone, cin, city, status, shares) in enumerate(
+            members_data
+        ):
             create_member(
-                cooperative=cooperative, first_name=first_name, last_name=last_name,
-                phone_number=phone, cin=cin, city=city, status=status,
-                shares_count=shares, join_date=date.today() - timedelta(days=index * 25 + 30),
+                cooperative=cooperative,
+                first_name=first_name,
+                last_name=last_name,
+                phone_number=phone,
+                cin=cin,
+                city=city,
+                status=status,
+                shares_count=shares,
+                join_date=date.today() - timedelta(days=index * 25 + 30),
             )
         self.stdout.write(self.style.SUCCESS(f"✓ {len(members_data)} membres créés"))
 
     def _create_partners(self, cooperative: Cooperative):
         customers = [
             create_partner(
-                cooperative=cooperative, is_customer=True, is_supplier=False,
-                name="Épicerie Fine Al Baraka", phone_number="0522111222", city="Casablanca",
-                payment_terms_days=30, credit_limit=Decimal("60000"),
+                cooperative=cooperative,
+                is_customer=True,
+                is_supplier=False,
+                name="Épicerie Fine Al Baraka",
+                phone_number="0522111222",
+                city="Casablanca",
+                payment_terms_days=30,
+                credit_limit=Decimal("60000"),
             ),
             create_partner(
-                cooperative=cooperative, is_customer=True, is_supplier=False,
-                name="Boutique Souk Argane Export", phone_number="0524333444", city="Marrakech",
-                payment_terms_days=15, credit_limit=Decimal("40000"),
+                cooperative=cooperative,
+                is_customer=True,
+                is_supplier=False,
+                name="Boutique Souk Argane Export",
+                phone_number="0524333444",
+                city="Marrakech",
+                payment_terms_days=15,
+                credit_limit=Decimal("40000"),
             ),
             create_partner(
-                cooperative=cooperative, is_customer=True, is_supplier=False,
-                name="Coopérative Rurale Tafraout", phone_number="0528555777", city="Tafraout",
-                payment_terms_days=45, credit_limit=Decimal("30000"),
+                cooperative=cooperative,
+                is_customer=True,
+                is_supplier=False,
+                name="Coopérative Rurale Tafraout",
+                phone_number="0528555777",
+                city="Tafraout",
+                payment_terms_days=45,
+                credit_limit=Decimal("30000"),
             ),
             create_partner(
-                cooperative=cooperative, is_customer=True, is_supplier=False,
-                name="Hamam & Cosmétique Atlas", phone_number="0528444888", city="Agadir",
-                payment_terms_days=30, credit_limit=Decimal("25000"),
+                cooperative=cooperative,
+                is_customer=True,
+                is_supplier=False,
+                name="Hamam & Cosmétique Atlas",
+                phone_number="0528444888",
+                city="Agadir",
+                payment_terms_days=30,
+                credit_limit=Decimal("25000"),
             ),
             create_partner(
-                cooperative=cooperative, is_customer=True, is_supplier=False,
-                name="Suprême Cadeaux Souss", phone_number="0528333999", city="Agadir",
-                payment_terms_days=60, credit_limit=Decimal("35000"),
+                cooperative=cooperative,
+                is_customer=True,
+                is_supplier=False,
+                name="Suprême Cadeaux Souss",
+                phone_number="0528333999",
+                city="Agadir",
+                payment_terms_days=60,
+                credit_limit=Decimal("35000"),
             ),
             create_partner(
-                cooperative=cooperative, is_customer=True, is_supplier=False,
-                name="Marché Municipal Taroudant", phone_number="0528233000", city="Taroudant",
-                payment_terms_days=30, credit_limit=Decimal("20000"),
+                cooperative=cooperative,
+                is_customer=True,
+                is_supplier=False,
+                name="Marché Municipal Taroudant",
+                phone_number="0528233000",
+                city="Taroudant",
+                payment_terms_days=30,
+                credit_limit=Decimal("20000"),
             ),
         ]
         suppliers = [
             create_partner(
-                cooperative=cooperative, is_customer=False, is_supplier=True,
-                name="Fournisseur Emballages Sud", phone_number="0528555666", city="Agadir",
+                cooperative=cooperative,
+                is_customer=False,
+                is_supplier=True,
+                name="Fournisseur Emballages Sud",
+                phone_number="0528555666",
+                city="Agadir",
             ),
             create_partner(
-                cooperative=cooperative, is_customer=False, is_supplier=True,
-                name="Bouteilles Atlas Glass", phone_number="0522555111", city="Casablanca",
+                cooperative=cooperative,
+                is_customer=False,
+                is_supplier=True,
+                name="Bouteilles Atlas Glass",
+                phone_number="0522555111",
+                city="Casablanca",
             ),
             create_partner(
-                cooperative=cooperative, is_customer=False, is_supplier=True,
-                name="Coopérative Productrice Taliouine", phone_number="0528666222", city="Taliouine",
+                cooperative=cooperative,
+                is_customer=False,
+                is_supplier=True,
+                name="Coopérative Productrice Taliouine",
+                phone_number="0528666222",
+                city="Taliouine",
             ),
             create_partner(
-                cooperative=cooperative, is_customer=False, is_supplier=True,
-                name="Transport & Logistique Souss", phone_number="0528777333", city="Agadir",
+                cooperative=cooperative,
+                is_customer=False,
+                is_supplier=True,
+                name="Transport & Logistique Souss",
+                phone_number="0528777333",
+                city="Agadir",
             ),
         ]
         self.stdout.write(
-            self.style.SUCCESS(f"✓ {len(customers)} clients et {len(suppliers)} fournisseur(s) créés")
+            self.style.SUCCESS(
+                f"✓ {len(customers)} clients et {len(suppliers)} fournisseur(s) créés"
+            )
         )
         return customers, suppliers
 
     def _create_units(self, cooperative: Cooperative):
         return {
-            "kg": Unit.objects.create(cooperative=cooperative, name="Kilogramme", symbol="kg", unit_type="weight"),
-            "l": Unit.objects.create(cooperative=cooperative, name="Litre", symbol="L", unit_type="volume"),
-            "pc": Unit.objects.create(cooperative=cooperative, name="Pièce", symbol="pc", unit_type="count"),
+            "kg": Unit.objects.create(
+                cooperative=cooperative, name="Kilogramme", symbol="kg", unit_type="weight"
+            ),
+            "l": Unit.objects.create(
+                cooperative=cooperative, name="Litre", symbol="L", unit_type="volume"
+            ),
+            "pc": Unit.objects.create(
+                cooperative=cooperative, name="Pièce", symbol="pc", unit_type="count"
+            ),
         }
 
     def _create_categories(self, cooperative: Cooperative):
         return {
-            "huiles": Category.objects.create(cooperative=cooperative, name={"fr": "Huiles", "ar": "الزيوت"}),
-            "cosmetique": Category.objects.create(cooperative=cooperative, name={"fr": "Cosmétique", "ar": "مستحضرات التجميل"}),
-            "savons": Category.objects.create(cooperative=cooperative, name={"fr": "Savons", "ar": "الصابون"}),
-            "terroir": Category.objects.create(cooperative=cooperative, name={"fr": "Produits du terroir", "ar": "منتوجات محلية"}),
-            "epicerie": Category.objects.create(cooperative=cooperative, name={"fr": "Épicerie fine", "ar": "بقالة راقية"}),
+            "huiles": Category.objects.create(
+                cooperative=cooperative, name={"fr": "Huiles", "ar": "الزيوت"}
+            ),
+            "cosmetique": Category.objects.create(
+                cooperative=cooperative, name={"fr": "Cosmétique", "ar": "مستحضرات التجميل"}
+            ),
+            "savons": Category.objects.create(
+                cooperative=cooperative, name={"fr": "Savons", "ar": "الصابون"}
+            ),
+            "terroir": Category.objects.create(
+                cooperative=cooperative, name={"fr": "Produits du terroir", "ar": "منتوجات محلية"}
+            ),
+            "epicerie": Category.objects.create(
+                cooperative=cooperative, name={"fr": "Épicerie fine", "ar": "بقالة راقية"}
+            ),
         }
 
     def _create_products(self, cooperative: Cooperative, units: dict, categories: dict):
         products = {
             "huile_culinaire": catalog_services.create_product(
-                cooperative=cooperative, name={"fr": "Huile d'argane culinaire", "ar": "زيت الأركان الغذائي"},
-                unit=units["l"], category=categories["huiles"],
-                reference_purchase_price=Decimal("180"), reference_sale_price=Decimal("280"),
+                cooperative=cooperative,
+                name={"fr": "Huile d'argane culinaire", "ar": "زيت الأركان الغذائي"},
+                unit=units["l"],
+                category=categories["huiles"],
+                reference_purchase_price=Decimal("180"),
+                reference_sale_price=Decimal("280"),
                 minimum_stock_threshold=Decimal("20"),
             ),
             "huile_cosmetique": catalog_services.create_product(
-                cooperative=cooperative, name={"fr": "Huile d'argane cosmétique", "ar": "زيت الأركان التجميلي"},
-                unit=units["l"], category=categories["huiles"],
-                reference_purchase_price=Decimal("220"), reference_sale_price=Decimal("350"),
+                cooperative=cooperative,
+                name={"fr": "Huile d'argane cosmétique", "ar": "زيت الأركان التجميلي"},
+                unit=units["l"],
+                category=categories["huiles"],
+                reference_purchase_price=Decimal("220"),
+                reference_sale_price=Decimal("350"),
                 minimum_stock_threshold=Decimal("15"),
             ),
             "huile_barbarie": catalog_services.create_product(
-                cooperative=cooperative, name={"fr": "Huile de figue de barbarie", "ar": "زيت التين الشوكي"},
-                unit=units["l"], category=categories["huiles"],
-                reference_purchase_price=Decimal("300"), reference_sale_price=Decimal("450"),
+                cooperative=cooperative,
+                name={"fr": "Huile de figue de barbarie", "ar": "زيت التين الشوكي"},
+                unit=units["l"],
+                category=categories["huiles"],
+                reference_purchase_price=Decimal("300"),
+                reference_sale_price=Decimal("450"),
                 minimum_stock_threshold=Decimal("10"),
             ),
             "savon_noir": catalog_services.create_product(
-                cooperative=cooperative, name={"fr": "Savon noir à l'argane", "ar": "الصابون الأسود بالأركان"},
-                unit=units["pc"], category=categories["savons"],
-                reference_purchase_price=Decimal("12"), reference_sale_price=Decimal("25"),
+                cooperative=cooperative,
+                name={"fr": "Savon noir à l'argane", "ar": "الصابون الأسود بالأركان"},
+                unit=units["pc"],
+                category=categories["savons"],
+                reference_purchase_price=Decimal("12"),
+                reference_sale_price=Decimal("25"),
                 minimum_stock_threshold=Decimal("50"),
             ),
             "savon_argane": catalog_services.create_product(
-                cooperative=cooperative, name={"fr": "Savon à l'argane", "ar": "صابون الأركان"},
-                unit=units["pc"], category=categories["savons"],
-                reference_purchase_price=Decimal("18"), reference_sale_price=Decimal("35"),
+                cooperative=cooperative,
+                name={"fr": "Savon à l'argane", "ar": "صابون الأركان"},
+                unit=units["pc"],
+                category=categories["savons"],
+                reference_purchase_price=Decimal("18"),
+                reference_sale_price=Decimal("35"),
                 minimum_stock_threshold=Decimal("40"),
             ),
             "savon_lait": catalog_services.create_product(
-                cooperative=cooperative, name={"fr": "Savon au lait de chèvre", "ar": "صابون حليب الماعز"},
-                unit=units["pc"], category=categories["savons"],
-                reference_purchase_price=Decimal("15"), reference_sale_price=Decimal("28"),
+                cooperative=cooperative,
+                name={"fr": "Savon au lait de chèvre", "ar": "صابون حليب الماعز"},
+                unit=units["pc"],
+                category=categories["savons"],
+                reference_purchase_price=Decimal("15"),
+                reference_sale_price=Decimal("28"),
                 minimum_stock_threshold=Decimal("40"),
             ),
             "amlou": catalog_services.create_product(
-                cooperative=cooperative, name={"fr": "Amlou traditionnel", "ar": "أملو تقليدي"},
-                unit=units["kg"], category=categories["terroir"],
-                reference_purchase_price=Decimal("90"), reference_sale_price=Decimal("150"),
+                cooperative=cooperative,
+                name={"fr": "Amlou traditionnel", "ar": "أملو تقليدي"},
+                unit=units["kg"],
+                category=categories["terroir"],
+                reference_purchase_price=Decimal("90"),
+                reference_sale_price=Decimal("150"),
                 minimum_stock_threshold=Decimal("25"),
             ),
             "creme": catalog_services.create_product(
-                cooperative=cooperative, name={"fr": "Crème hydratante à l'argane", "ar": "كريم مرطب بالأركان"},
-                unit=units["pc"], category=categories["cosmetique"],
-                reference_purchase_price=Decimal("45"), reference_sale_price=Decimal("85"),
+                cooperative=cooperative,
+                name={"fr": "Crème hydratante à l'argane", "ar": "كريم مرطب بالأركان"},
+                unit=units["pc"],
+                category=categories["cosmetique"],
+                reference_purchase_price=Decimal("45"),
+                reference_sale_price=Decimal("85"),
                 minimum_stock_threshold=Decimal("20"),
             ),
             "the": catalog_services.create_product(
-                cooperative=cooperative, name={"fr": "Thé à la menthe", "ar": "شاي النعناع"},
-                unit=units["kg"], category=categories["epicerie"],
-                reference_purchase_price=Decimal("60"), reference_sale_price=Decimal("110"),
+                cooperative=cooperative,
+                name={"fr": "Thé à la menthe", "ar": "شاي النعناع"},
+                unit=units["kg"],
+                category=categories["epicerie"],
+                reference_purchase_price=Decimal("60"),
+                reference_sale_price=Decimal("110"),
                 minimum_stock_threshold=Decimal("30"),
             ),
             "epices": catalog_services.create_product(
-                cooperative=cooperative, name={"fr": "Mélange d'épices artisanales", "ar": "خليط التوابل التقليدية"},
-                unit=units["kg"], category=categories["epicerie"],
-                reference_purchase_price=Decimal("40"), reference_sale_price=Decimal("75"),
+                cooperative=cooperative,
+                name={"fr": "Mélange d'épices artisanales", "ar": "خليط التوابل التقليدية"},
+                unit=units["kg"],
+                category=categories["epicerie"],
+                reference_purchase_price=Decimal("40"),
+                reference_sale_price=Decimal("75"),
                 minimum_stock_threshold=Decimal("30"),
             ),
         }
@@ -299,18 +426,25 @@ class Command(BaseCommand):
         return products
 
     def _create_warehouses(self, cooperative: Cooperative):
-        main = create_warehouse(cooperative=cooperative, name="Entrepôt Principal Agadir", city="Agadir")
+        main = create_warehouse(
+            cooperative=cooperative, name="Entrepôt Principal Agadir", city="Agadir"
+        )
         secondary = create_warehouse(cooperative=cooperative, name="Dépôt Tiznit", city="Tiznit")
-        self.stdout.write(self.style.SUCCESS("✓ 2 entrepôts créés (Agadir par défaut + Dépôt Tiznit)"))
+        self.stdout.write(
+            self.style.SUCCESS("✓ 2 entrepôts créés (Agadir par défaut + Dépôt Tiznit)")
+        )
         return {"agadir": main, "tiznit": secondary}
 
     def _load_pcm(self, cooperative: Cooperative):
         """Charge le plan comptable marocain + journaux (comme `load_pcm`)."""
         code_to_account: dict[str, Account] = {}
         for acc_data in PCM_ACCOUNTS:
-            parent = code_to_account.get(acc_data["parent_code"]) if acc_data["parent_code"] else None
+            parent = (
+                code_to_account.get(acc_data["parent_code"]) if acc_data["parent_code"] else None
+            )
             account, _ = Account.all_objects.get_or_create(
-                cooperative=cooperative, code=acc_data["code"],
+                cooperative=cooperative,
+                code=acc_data["code"],
                 defaults={
                     "name": {"fr": acc_data["fr"], "ar": acc_data["ar"]},
                     "account_type": acc_data["type"],
@@ -322,7 +456,8 @@ class Command(BaseCommand):
             code_to_account[acc_data["code"]] = account
         journals = {
             jdata["code"]: Journal.all_objects.get_or_create(
-                cooperative=cooperative, code=jdata["code"],
+                cooperative=cooperative,
+                code=jdata["code"],
                 defaults={
                     "name": {"fr": jdata["fr"], "ar": jdata["ar"]},
                     "journal_type": jdata["type"],
@@ -332,7 +467,9 @@ class Command(BaseCommand):
             for jdata in DEFAULT_JOURNALS
         }
         self.stdout.write(
-            self.style.SUCCESS(f"✓ PCM chargé ({len(code_to_account)} comptes, {len(journals)} journaux)")
+            self.style.SUCCESS(
+                f"✓ PCM chargé ({len(code_to_account)} comptes, {len(journals)} journaux)"
+            )
         )
         return code_to_account, journals
 
@@ -340,16 +477,24 @@ class Command(BaseCommand):
 
     def _create_purchase(self, cooperative, supplier, warehouse, actor, order_date, lines):
         order = purchases_services.create_purchase_order(
-            cooperative=cooperative, supplier=supplier, warehouse=warehouse, actor=actor,
-            order_date=order_date, lines=lines,
+            cooperative=cooperative,
+            supplier=supplier,
+            warehouse=warehouse,
+            actor=actor,
+            order_date=order_date,
+            lines=lines,
         )
         return order
 
     def _receive_full(self, order, actor) -> None:
         purchases_services.confirm_purchase_order(order=order, actor=actor)
         purchases_services.record_purchase_receipt(
-            order=order, actor=actor,
-            receipts=[{"line_id": line.id, "quantity": line.quantity_ordered} for line in order.lines.all()],
+            order=order,
+            actor=actor,
+            receipts=[
+                {"line_id": line.id, "quantity": line.quantity_ordered}
+                for line in order.lines.all()
+            ],
         )
 
     def _run_purchase_cycles(self, cooperative, admin, suppliers, warehouses, products) -> None:
@@ -357,49 +502,118 @@ class Command(BaseCommand):
 
         # 1) Commandes entièrement réceptionnées (les deux fournisseurs principaux).
         order_a = self._create_purchase(
-            cooperative, suppliers[0], warehouses["agadir"], admin, d - timedelta(days=45),
+            cooperative,
+            suppliers[0],
+            warehouses["agadir"],
+            admin,
+            d - timedelta(days=45),
             lines=[
-                {"product": products["huile_culinaire"], "quantity_ordered": Decimal("100"), "unit_price": Decimal("175")},
-                {"product": products["savon_noir"], "quantity_ordered": Decimal("200"), "unit_price": Decimal("11")},
-                {"product": products["amlou"], "quantity_ordered": Decimal("60"), "unit_price": Decimal("85")},
-                {"product": products["savon_argane"], "quantity_ordered": Decimal("150"), "unit_price": Decimal("17")},
+                {
+                    "product": products["huile_culinaire"],
+                    "quantity_ordered": Decimal("100"),
+                    "unit_price": Decimal("175"),
+                },
+                {
+                    "product": products["savon_noir"],
+                    "quantity_ordered": Decimal("200"),
+                    "unit_price": Decimal("11"),
+                },
+                {
+                    "product": products["amlou"],
+                    "quantity_ordered": Decimal("60"),
+                    "unit_price": Decimal("85"),
+                },
+                {
+                    "product": products["savon_argane"],
+                    "quantity_ordered": Decimal("150"),
+                    "unit_price": Decimal("17"),
+                },
             ],
         )
         self._receive_full(order_a, admin)
 
         order_b = self._create_purchase(
-            cooperative, suppliers[2], warehouses["agadir"], admin, d - timedelta(days=20),
+            cooperative,
+            suppliers[2],
+            warehouses["agadir"],
+            admin,
+            d - timedelta(days=20),
             lines=[
-                {"product": products["huile_cosmetique"], "quantity_ordered": Decimal("60"), "unit_price": Decimal("210")},
-                {"product": products["creme"], "quantity_ordered": Decimal("100"), "unit_price": Decimal("42")},
-                {"product": products["huile_barbarie"], "quantity_ordered": Decimal("30"), "unit_price": Decimal("290")},
-                {"product": products["savon_lait"], "quantity_ordered": Decimal("150"), "unit_price": Decimal("14")},
+                {
+                    "product": products["huile_cosmetique"],
+                    "quantity_ordered": Decimal("60"),
+                    "unit_price": Decimal("210"),
+                },
+                {
+                    "product": products["creme"],
+                    "quantity_ordered": Decimal("100"),
+                    "unit_price": Decimal("42"),
+                },
+                {
+                    "product": products["huile_barbarie"],
+                    "quantity_ordered": Decimal("30"),
+                    "unit_price": Decimal("290"),
+                },
+                {
+                    "product": products["savon_lait"],
+                    "quantity_ordered": Decimal("150"),
+                    "unit_price": Decimal("14"),
+                },
             ],
         )
         self._receive_full(order_b, admin)
 
         # 2) Commande confirmée, non encore réceptionnée.
         order_c = self._create_purchase(
-            cooperative, suppliers[1], warehouses["agadir"], admin, d - timedelta(days=5),
+            cooperative,
+            suppliers[1],
+            warehouses["agadir"],
+            admin,
+            d - timedelta(days=5),
             lines=[
-                {"product": products["huile_culinaire"], "quantity_ordered": Decimal("50"), "unit_price": Decimal("175")},
-                {"product": products["huile_cosmetique"], "quantity_ordered": Decimal("40"), "unit_price": Decimal("215")},
+                {
+                    "product": products["huile_culinaire"],
+                    "quantity_ordered": Decimal("50"),
+                    "unit_price": Decimal("175"),
+                },
+                {
+                    "product": products["huile_cosmetique"],
+                    "quantity_ordered": Decimal("40"),
+                    "unit_price": Decimal("215"),
+                },
             ],
         )
         purchases_services.confirm_purchase_order(order=order_c, actor=admin)
 
         # 3) Commande partiellement réceptionnée (dépôt Tiznit).
         order_d = self._create_purchase(
-            cooperative, suppliers[2], warehouses["tiznit"], admin, d - timedelta(days=12),
+            cooperative,
+            suppliers[2],
+            warehouses["tiznit"],
+            admin,
+            d - timedelta(days=12),
             lines=[
-                {"product": products["amlou"], "quantity_ordered": Decimal("40"), "unit_price": Decimal("88")},
-                {"product": products["the"], "quantity_ordered": Decimal("80"), "unit_price": Decimal("55")},
-                {"product": products["epices"], "quantity_ordered": Decimal("60"), "unit_price": Decimal("38")},
+                {
+                    "product": products["amlou"],
+                    "quantity_ordered": Decimal("40"),
+                    "unit_price": Decimal("88"),
+                },
+                {
+                    "product": products["the"],
+                    "quantity_ordered": Decimal("80"),
+                    "unit_price": Decimal("55"),
+                },
+                {
+                    "product": products["epices"],
+                    "quantity_ordered": Decimal("60"),
+                    "unit_price": Decimal("38"),
+                },
             ],
         )
         purchases_services.confirm_purchase_order(order=order_d, actor=admin)
         purchases_services.record_purchase_receipt(
-            order=order_d, actor=admin,
+            order=order_d,
+            actor=admin,
             receipts=[
                 {"line_id": line.id, "quantity": line.quantity_ordered / 2}
                 for line in order_d.lines.all()
@@ -408,67 +622,126 @@ class Command(BaseCommand):
 
         # 4) Brouillon et annulée.
         self._create_purchase(
-            cooperative, suppliers[0], warehouses["agadir"], admin, d - timedelta(days=1),
+            cooperative,
+            suppliers[0],
+            warehouses["agadir"],
+            admin,
+            d - timedelta(days=1),
             lines=[
-                {"product": products["savon_argane"], "quantity_ordered": Decimal("80"), "unit_price": Decimal("17")},
-                {"product": products["savon_lait"], "quantity_ordered": Decimal("100"), "unit_price": Decimal("14")},
+                {
+                    "product": products["savon_argane"],
+                    "quantity_ordered": Decimal("80"),
+                    "unit_price": Decimal("17"),
+                },
+                {
+                    "product": products["savon_lait"],
+                    "quantity_ordered": Decimal("100"),
+                    "unit_price": Decimal("14"),
+                },
             ],
         )
         order_f = self._create_purchase(
-            cooperative, suppliers[1], warehouses["agadir"], admin, d - timedelta(days=30),
-            lines=[{"product": products["huile_barbarie"], "quantity_ordered": Decimal("20"), "unit_price": Decimal("295")}],
+            cooperative,
+            suppliers[1],
+            warehouses["agadir"],
+            admin,
+            d - timedelta(days=30),
+            lines=[
+                {
+                    "product": products["huile_barbarie"],
+                    "quantity_ordered": Decimal("20"),
+                    "unit_price": Decimal("295"),
+                }
+            ],
         )
         purchases_services.confirm_purchase_order(order=order_f, actor=admin)
         purchases_services.cancel_purchase_order(order=order_f, actor=admin)
 
-        self.stdout.write(self.style.SUCCESS("✓ Cycle achats : reçue ×2, confirmée, partielle, brouillon, annulée"))
+        self.stdout.write(
+            self.style.SUCCESS(
+                "✓ Cycle achats : reçue ×2, confirmée, partielle, brouillon, annulée"
+            )
+        )
 
     def _run_stock_cycles(self, cooperative, admin, warehouses, products) -> None:
         # Production propre de la coopérative (entrée).
         inventory_services.record_stock_in(
-            product=products["huile_cosmetique"], warehouse=warehouses["agadir"], quantity=Decimal("40"),
-            actor=admin, reason="initial", reference="PROD-INTERNE-001",
+            product=products["huile_cosmetique"],
+            warehouse=warehouses["agadir"],
+            quantity=Decimal("40"),
+            actor=admin,
+            reason="initial",
+            reference="PROD-INTERNE-001",
         )
         # Transfert inter-entrepôts Agadir -> Tiznit.
         inventory_services.record_stock_transfer(
-            product=products["huile_culinaire"], from_warehouse=warehouses["agadir"],
-            to_warehouse=warehouses["tiznit"], quantity=Decimal("20"),
-            actor=admin, reference="TRF-001",
+            product=products["huile_culinaire"],
+            from_warehouse=warehouses["agadir"],
+            to_warehouse=warehouses["tiznit"],
+            quantity=Decimal("20"),
+            actor=admin,
+            reference="TRF-001",
         )
         # Pertes / casse.
         inventory_services.record_stock_out(
-            product=products["savon_lait"], warehouse=warehouses["agadir"], quantity=Decimal("5"),
-            actor=admin, reason="loss", reference="PERTE-001",
+            product=products["savon_lait"],
+            warehouse=warehouses["agadir"],
+            quantity=Decimal("5"),
+            actor=admin,
+            reason="loss",
+            reference="PERTE-001",
         )
         # Ajustements d'inventaire (=> stock bas signalé).
         inventory_services.record_stock_out(
-            product=products["savon_argane"], warehouse=warehouses["agadir"], quantity=Decimal("15"),
-            actor=admin, reason="adjustment", reference="AJUST-001",
+            product=products["savon_argane"],
+            warehouse=warehouses["agadir"],
+            quantity=Decimal("15"),
+            actor=admin,
+            reason="adjustment",
+            reference="AJUST-001",
         )
         inventory_services.record_stock_out(
-            product=products["epices"], warehouse=warehouses["tiznit"], quantity=Decimal("5"),
-            actor=admin, reason="adjustment", reference="AJUST-002",
+            product=products["epices"],
+            warehouse=warehouses["tiznit"],
+            quantity=Decimal("5"),
+            actor=admin,
+            reason="adjustment",
+            reference="AJUST-002",
         )
         # Un mouvement de sortie récent pour peupler le filtre "raison".
         inventory_services.record_stock_out(
-            product=products["amlou"], warehouse=warehouses["agadir"], quantity=Decimal("3"),
-            actor=admin, reason="return_supplier", reference="RET-001",
+            product=products["amlou"],
+            warehouse=warehouses["agadir"],
+            quantity=Decimal("3"),
+            actor=admin,
+            reason="return_supplier",
+            reference="RET-001",
         )
-        self.stdout.write(self.style.SUCCESS("✓ Stock : entrée, transfert, perte, ajustements, retour"))
+        self.stdout.write(
+            self.style.SUCCESS("✓ Stock : entrée, transfert, perte, ajustements, retour")
+        )
 
     # --- Ventes -> Livraisons ---
 
     def _create_sales(self, cooperative, staff, customer, warehouse, products, order_date, lines):
         return sales_services.create_sales_order(
-            cooperative=cooperative, customer=customer, warehouse=warehouse, actor=staff,
-            order_date=order_date, lines=lines,
+            cooperative=cooperative,
+            customer=customer,
+            warehouse=warehouse,
+            actor=staff,
+            order_date=order_date,
+            lines=lines,
         )
 
     def _deliver_full(self, order, actor) -> None:
         sales_services.confirm_sales_order(order=order, actor=actor)
         sales_services.record_sales_delivery(
-            order=order, actor=actor,
-            deliveries=[{"line_id": line.id, "quantity": line.quantity_ordered} for line in order.lines.all()],
+            order=order,
+            actor=actor,
+            deliveries=[
+                {"line_id": line.id, "quantity": line.quantity_ordered}
+                for line in order.lines.all()
+            ],
         )
 
     def _run_sales_cycles(self, cooperative, staff, customers, warehouses, products):
@@ -477,46 +750,111 @@ class Command(BaseCommand):
 
         # Livrées (seront facturées dans le cycle factures).
         orders["so1"] = self._create_sales(
-            cooperative, staff, customers[0], warehouses["agadir"], products, d - timedelta(days=8),
+            cooperative,
+            staff,
+            customers[0],
+            warehouses["agadir"],
+            products,
+            d - timedelta(days=8),
             lines=[
-                {"product": products["huile_culinaire"], "quantity_ordered": Decimal("20"), "unit_price": Decimal("280")},
-                {"product": products["savon_noir"], "quantity_ordered": Decimal("50"), "unit_price": Decimal("25")},
-                {"product": products["amlou"], "quantity_ordered": Decimal("15"), "unit_price": Decimal("150")},
+                {
+                    "product": products["huile_culinaire"],
+                    "quantity_ordered": Decimal("20"),
+                    "unit_price": Decimal("280"),
+                },
+                {
+                    "product": products["savon_noir"],
+                    "quantity_ordered": Decimal("50"),
+                    "unit_price": Decimal("25"),
+                },
+                {
+                    "product": products["amlou"],
+                    "quantity_ordered": Decimal("15"),
+                    "unit_price": Decimal("150"),
+                },
             ],
         )
         self._deliver_full(orders["so1"], staff)
 
         orders["so2"] = self._create_sales(
-            cooperative, staff, customers[1], warehouses["agadir"], products, d - timedelta(days=15),
+            cooperative,
+            staff,
+            customers[1],
+            warehouses["agadir"],
+            products,
+            d - timedelta(days=15),
             lines=[
-                {"product": products["huile_cosmetique"], "quantity_ordered": Decimal("15"), "unit_price": Decimal("350")},
-                {"product": products["creme"], "quantity_ordered": Decimal("30"), "unit_price": Decimal("85")},
-                {"product": products["savon_argane"], "quantity_ordered": Decimal("40"), "unit_price": Decimal("35")},
+                {
+                    "product": products["huile_cosmetique"],
+                    "quantity_ordered": Decimal("15"),
+                    "unit_price": Decimal("350"),
+                },
+                {
+                    "product": products["creme"],
+                    "quantity_ordered": Decimal("30"),
+                    "unit_price": Decimal("85"),
+                },
+                {
+                    "product": products["savon_argane"],
+                    "quantity_ordered": Decimal("40"),
+                    "unit_price": Decimal("35"),
+                },
             ],
         )
         self._deliver_full(orders["so2"], staff)
 
         orders["so3"] = self._create_sales(
-            cooperative, staff, customers[3], warehouses["agadir"], products, d - timedelta(days=30),
+            cooperative,
+            staff,
+            customers[3],
+            warehouses["agadir"],
+            products,
+            d - timedelta(days=30),
             lines=[
-                {"product": products["savon_argane"], "quantity_ordered": Decimal("60"), "unit_price": Decimal("35")},
-                {"product": products["savon_noir"], "quantity_ordered": Decimal("80"), "unit_price": Decimal("25")},
-                {"product": products["savon_lait"], "quantity_ordered": Decimal("40"), "unit_price": Decimal("28")},
+                {
+                    "product": products["savon_argane"],
+                    "quantity_ordered": Decimal("60"),
+                    "unit_price": Decimal("35"),
+                },
+                {
+                    "product": products["savon_noir"],
+                    "quantity_ordered": Decimal("80"),
+                    "unit_price": Decimal("25"),
+                },
+                {
+                    "product": products["savon_lait"],
+                    "quantity_ordered": Decimal("40"),
+                    "unit_price": Decimal("28"),
+                },
             ],
         )
         self._deliver_full(orders["so3"], staff)
 
         # Partiellement livrée (facturée sur les quantités livrées uniquement).
         orders["so7"] = self._create_sales(
-            cooperative, staff, customers[0], warehouses["agadir"], products, d - timedelta(days=10),
+            cooperative,
+            staff,
+            customers[0],
+            warehouses["agadir"],
+            products,
+            d - timedelta(days=10),
             lines=[
-                {"product": products["creme"], "quantity_ordered": Decimal("40"), "unit_price": Decimal("85")},
-                {"product": products["savon_lait"], "quantity_ordered": Decimal("30"), "unit_price": Decimal("28")},
+                {
+                    "product": products["creme"],
+                    "quantity_ordered": Decimal("40"),
+                    "unit_price": Decimal("85"),
+                },
+                {
+                    "product": products["savon_lait"],
+                    "quantity_ordered": Decimal("30"),
+                    "unit_price": Decimal("28"),
+                },
             ],
         )
         sales_services.confirm_sales_order(order=orders["so7"], actor=staff)
         sales_services.record_sales_delivery(
-            order=orders["so7"], actor=staff,
+            order=orders["so7"],
+            actor=staff,
             deliveries=[
                 {"line_id": orders["so7"].lines.all()[0].id, "quantity": Decimal("20")},
                 {"line_id": orders["so7"].lines.all()[1].id, "quantity": Decimal("15")},
@@ -525,47 +863,93 @@ class Command(BaseCommand):
 
         # Confirmée, non livrée.
         orders["so4"] = self._create_sales(
-            cooperative, staff, customers[4], warehouses["agadir"], products, d - timedelta(days=3),
+            cooperative,
+            staff,
+            customers[4],
+            warehouses["agadir"],
+            products,
+            d - timedelta(days=3),
             lines=[
-                {"product": products["huile_culinaire"], "quantity_ordered": Decimal("10"), "unit_price": Decimal("285")},
-                {"product": products["amlou"], "quantity_ordered": Decimal("10"), "unit_price": Decimal("150")},
+                {
+                    "product": products["huile_culinaire"],
+                    "quantity_ordered": Decimal("10"),
+                    "unit_price": Decimal("285"),
+                },
+                {
+                    "product": products["amlou"],
+                    "quantity_ordered": Decimal("10"),
+                    "unit_price": Decimal("150"),
+                },
             ],
         )
         sales_services.confirm_sales_order(order=orders["so4"], actor=staff)
 
         # Brouillon.
         self._create_sales(
-            cooperative, staff, customers[5], warehouses["agadir"], products, d - timedelta(days=1),
+            cooperative,
+            staff,
+            customers[5],
+            warehouses["agadir"],
+            products,
+            d - timedelta(days=1),
             lines=[
-                {"product": products["huile_cosmetique"], "quantity_ordered": Decimal("8"), "unit_price": Decimal("350")},
-                {"product": products["creme"], "quantity_ordered": Decimal("10"), "unit_price": Decimal("85")},
+                {
+                    "product": products["huile_cosmetique"],
+                    "quantity_ordered": Decimal("8"),
+                    "unit_price": Decimal("350"),
+                },
+                {
+                    "product": products["creme"],
+                    "quantity_ordered": Decimal("10"),
+                    "unit_price": Decimal("85"),
+                },
             ],
         )
 
         # Annulée.
         orders["so6"] = self._create_sales(
-            cooperative, staff, customers[1], warehouses["agadir"], products, d - timedelta(days=25),
-            lines=[{"product": products["huile_barbarie"], "quantity_ordered": Decimal("5"), "unit_price": Decimal("450")}],
+            cooperative,
+            staff,
+            customers[1],
+            warehouses["agadir"],
+            products,
+            d - timedelta(days=25),
+            lines=[
+                {
+                    "product": products["huile_barbarie"],
+                    "quantity_ordered": Decimal("5"),
+                    "unit_price": Decimal("450"),
+                }
+            ],
         )
         sales_services.confirm_sales_order(order=orders["so6"], actor=staff)
         sales_services.cancel_sales_order(order=orders["so6"], actor=staff)
 
-        self.stdout.write(self.style.SUCCESS("✓ Ventes : livrée ×3, partielle, confirmée, brouillon, annulée"))
+        self.stdout.write(
+            self.style.SUCCESS("✓ Ventes : livrée ×3, partielle, confirmée, brouillon, annulée")
+        )
         return orders
 
     # --- Factures & paiements ---
 
     def _invoice_from_order(self, order, actor, issue_date, due_date=None):
         invoice = billing_services.generate_invoice_from_sales_order(
-            order=order, actor=actor, issue_date=issue_date, due_date=due_date,
+            order=order,
+            actor=actor,
+            issue_date=issue_date,
+            due_date=due_date,
         )
         billing_services.issue_invoice(invoice=invoice, actor=actor)
         return invoice
 
     def _manual_invoice(self, cooperative, customer, actor, issue_date, lines, due_date=None):
         invoice = billing_services.create_manual_invoice(
-            cooperative=cooperative, customer=customer, actor=actor,
-            issue_date=issue_date, due_date=due_date, lines=lines,
+            cooperative=cooperative,
+            customer=customer,
+            actor=actor,
+            issue_date=issue_date,
+            due_date=due_date,
+            lines=lines,
         )
         return invoice
 
@@ -575,76 +959,139 @@ class Command(BaseCommand):
         # 1) Factures émises depuis les commandes livrées.
         #    Facture A — partiellement réglée (virement).
         invoice_a = self._invoice_from_order(
-            orders["so3"], staff, d - timedelta(days=29),
+            orders["so3"],
+            staff,
+            d - timedelta(days=29),
         )
         #    Facture B — entièrement réglée (espèces).
         invoice_b = self._invoice_from_order(
-            orders["so2"], staff, d - timedelta(days=14),
+            orders["so2"],
+            staff,
+            d - timedelta(days=14),
         )
         #    Facture C — échue et impayée (encours client en retard).
         self._invoice_from_order(
-            orders["so1"], staff, d - timedelta(days=7), due_date=d - timedelta(days=5),
+            orders["so1"],
+            staff,
+            d - timedelta(days=7),
+            due_date=d - timedelta(days=5),
         )
         #    Facture D — émise à l'échéance, impayée mais pas en retard.
         self._invoice_from_order(
-            orders["so7"], staff, d - timedelta(days=6),
+            orders["so7"],
+            staff,
+            d - timedelta(days=6),
         )
 
         # 2) Paiements.
         billing_services.record_payment(
-            invoice=invoice_a, amount=invoice_a.total_amount / 2,
-            payment_date=d - timedelta(days=2), actor=staff,
-            payment_method=PaymentMethod.BANK_TRANSFER, reference="VIR-DEMO-001",
+            invoice=invoice_a,
+            amount=invoice_a.total_amount / 2,
+            payment_date=d - timedelta(days=2),
+            actor=staff,
+            payment_method=PaymentMethod.BANK_TRANSFER,
+            reference="VIR-DEMO-001",
         )
         billing_services.record_payment(
-            invoice=invoice_b, amount=invoice_b.total_amount,
-            payment_date=d - timedelta(days=3), actor=staff,
-            payment_method=PaymentMethod.CASH, reference="ESP-DEMO-001",
+            invoice=invoice_b,
+            amount=invoice_b.total_amount,
+            payment_date=d - timedelta(days=3),
+            actor=staff,
+            payment_method=PaymentMethod.CASH,
+            reference="ESP-DEMO-001",
         )
 
         # 3) Facture manuelle partiellement payée.
         manual_partial = self._manual_invoice(
-            cooperative, customers[5], staff, d - timedelta(days=10),
+            cooperative,
+            customers[5],
+            staff,
+            d - timedelta(days=10),
             lines=[
-                {"product": products["huile_culinaire"], "quantity": Decimal("5"), "unit_price": Decimal("285")},
-                {"product": products["savon_noir"], "quantity": Decimal("20"), "unit_price": Decimal("25")},
+                {
+                    "product": products["huile_culinaire"],
+                    "quantity": Decimal("5"),
+                    "unit_price": Decimal("285"),
+                },
+                {
+                    "product": products["savon_noir"],
+                    "quantity": Decimal("20"),
+                    "unit_price": Decimal("25"),
+                },
             ],
             due_date=d + timedelta(days=20),
         )
         billing_services.issue_invoice(invoice=manual_partial, actor=staff)
         billing_services.record_payment(
-            invoice=manual_partial, amount=Decimal("1000"),
-            payment_date=d - timedelta(days=1), actor=staff,
-            payment_method=PaymentMethod.CASH, reference="ESP-DEMO-002",
+            invoice=manual_partial,
+            amount=Decimal("1000"),
+            payment_date=d - timedelta(days=1),
+            actor=staff,
+            payment_method=PaymentMethod.CASH,
+            reference="ESP-DEMO-002",
         )
 
         # 4) Facture manuelle entièrement payée.
         manual_paid = self._manual_invoice(
-            cooperative, customers[4], staff, d - timedelta(days=6),
+            cooperative,
+            customers[4],
+            staff,
+            d - timedelta(days=6),
             lines=[
-                {"product": products["amlou"], "quantity": Decimal("8"), "unit_price": Decimal("155")},
-                {"product": products["the"], "quantity": Decimal("5"), "unit_price": Decimal("110")},
+                {
+                    "product": products["amlou"],
+                    "quantity": Decimal("8"),
+                    "unit_price": Decimal("155"),
+                },
+                {
+                    "product": products["the"],
+                    "quantity": Decimal("5"),
+                    "unit_price": Decimal("110"),
+                },
             ],
             due_date=d + timedelta(days=30),
         )
         billing_services.issue_invoice(invoice=manual_paid, actor=staff)
         billing_services.record_payment(
-            invoice=manual_paid, amount=manual_paid.total_amount,
-            payment_date=d - timedelta(days=2), actor=staff,
-            payment_method=PaymentMethod.CHECK, reference="CHQ-DEMO-001",
+            invoice=manual_paid,
+            amount=manual_paid.total_amount,
+            payment_date=d - timedelta(days=2),
+            actor=staff,
+            payment_method=PaymentMethod.CHECK,
+            reference="CHQ-DEMO-001",
         )
 
         # 5) Brouillon et annulée.
         self._manual_invoice(
-            cooperative, customers[3], staff, d - timedelta(days=2),
+            cooperative,
+            customers[3],
+            staff,
+            d - timedelta(days=2),
             lines=[
-                {"product": products["savon_lait"], "quantity": Decimal("10"), "unit_price": Decimal("28")},
-                {"product": products["creme"], "quantity": Decimal("5"), "unit_price": Decimal("85")},
+                {
+                    "product": products["savon_lait"],
+                    "quantity": Decimal("10"),
+                    "unit_price": Decimal("28"),
+                },
+                {
+                    "product": products["creme"],
+                    "quantity": Decimal("5"),
+                    "unit_price": Decimal("85"),
+                },
             ],
         )
         cancelled = self._manual_invoice(
-            cooperative, customers[5], staff, d - timedelta(days=20),
-            lines=[{"product": products["savon_noir"], "quantity": Decimal("10"), "unit_price": Decimal("25")}],
+            cooperative,
+            customers[5],
+            staff,
+            d - timedelta(days=20),
+            lines=[
+                {
+                    "product": products["savon_noir"],
+                    "quantity": Decimal("10"),
+                    "unit_price": Decimal("25"),
+                }
+            ],
         )
         billing_services.issue_invoice(invoice=cancelled, actor=staff)
         billing_services.cancel_invoice(invoice=cancelled, actor=staff)
@@ -676,34 +1123,68 @@ class Command(BaseCommand):
                 for code, debit, credit in pairs
             ]
             return create_accounting_entry(
-                cooperative=cooperative, journal=journals[journal_code], entry_date=entry_date,
-                description=description, lines_data=lines_data, actor=accountant,
+                cooperative=cooperative,
+                journal=journals[journal_code],
+                entry_date=entry_date,
+                description=description,
+                lines_data=lines_data,
+                actor=accountant,
             )
 
         # Apport en capital (validée, période antérieure).
-        e1 = entry("OD", d - timedelta(days=50), "Apport en capital", [
-            ("5141", 50000, 0), ("101", 0, 50000),
-        ])
+        e1 = entry(
+            "OD",
+            d - timedelta(days=50),
+            "Apport en capital",
+            [
+                ("5141", 50000, 0),
+                ("101", 0, 50000),
+            ],
+        )
         post_entry(entry=e1, actor=accountant)
         # Achat de matières premières (validée, fournisseur à payer).
-        e2 = entry("JA", d - timedelta(days=20), "Achat emballages et matières", [
-            ("601", 12000, 0), ("401", 0, 12000),
-        ])
+        e2 = entry(
+            "JA",
+            d - timedelta(days=20),
+            "Achat emballages et matières",
+            [
+                ("601", 12000, 0),
+                ("401", 0, 12000),
+            ],
+        )
         post_entry(entry=e2, actor=accountant)
         # Loyer local (validée, caisse).
-        e3 = entry("CAI", d - timedelta(days=12), "Loyer local Agadir", [
-            ("61", 3000, 0), ("5161", 0, 3000),
-        ])
+        e3 = entry(
+            "CAI",
+            d - timedelta(days=12),
+            "Loyer local Agadir",
+            [
+                ("61", 3000, 0),
+                ("5161", 0, 3000),
+            ],
+        )
         post_entry(entry=e3, actor=accountant)
         # Subvention d'exploitation encaissée (validée, banque).
-        e4 = entry("BQ", d - timedelta(days=8), "Subvention d'exploitation encaissée", [
-            ("5141", 8000, 0), ("74", 0, 8000),
-        ])
+        e4 = entry(
+            "BQ",
+            d - timedelta(days=8),
+            "Subvention d'exploitation encaissée",
+            [
+                ("5141", 8000, 0),
+                ("74", 0, 8000),
+            ],
+        )
         post_entry(entry=e4, actor=accountant)
         # Provision (brouillon, non validée — visible dans le journal).
-        entry("OD", d - timedelta(days=3), "Provision pour charges (à valider)", [
-            ("63", 2000, 0), ("5161", 0, 2000),
-        ])
+        entry(
+            "OD",
+            d - timedelta(days=3),
+            "Provision pour charges (à valider)",
+            [
+                ("63", 2000, 0),
+                ("5161", 0, 2000),
+            ],
+        )
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -779,5 +1260,7 @@ class Command(BaseCommand):
         for user in (owner, admin, staff, accountant):
             self.stdout.write(f"    {user.role:<12} {user.email}")
         self.stdout.write("")
-        self.stdout.write("  Connecte-toi sur http://localhost:5173 avec owner@demo.ma pour voir le dashboard complet.")
+        self.stdout.write(
+            "  Connecte-toi sur http://localhost:5173 avec owner@demo.ma pour voir le dashboard complet."
+        )
         self.stdout.write(self.style.SUCCESS("=" * 60))

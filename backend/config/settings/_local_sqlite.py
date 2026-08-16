@@ -7,6 +7,7 @@ Usage :
     DJANGO_SETTINGS_MODULE=config.settings._local_sqlite python3 manage.py migrate
     DJANGO_SETTINGS_MODULE=config.settings._local_sqlite python3 manage.py seed_demo_data --reset
 """
+
 from .base import *  # noqa: F401,F403
 
 DEBUG = True

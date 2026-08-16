@@ -1,6 +1,7 @@
 """
 Tests de gestion d'équipe : changement de rôle, désactivation, garde-fous.
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
@@ -21,16 +22,25 @@ class TeamManagementTestCase(APITestCase):
         self.cooperative = Cooperative.objects.create(name="Coopérative Argane", slug="argane")
 
         self.owner = User.objects.create_user(
-            username="owner", email="owner@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="owner",
+            username="owner",
+            email="owner@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="owner",
         )
         self.admin = User.objects.create_user(
-            username="admin", email="admin@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="admin",
+            username="admin",
+            email="admin@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="admin",
         )
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
 
     def _auth(self, user) -> None:  # noqa: ANN001
@@ -41,7 +51,9 @@ class TeamManagementTestCase(APITestCase):
         self._auth(self.owner)
         response = self.client.get(reverse("users:team-list"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]) if "results" in response.data else len(response.data), 3)
+        self.assertEqual(
+            len(response.data["results"]) if "results" in response.data else len(response.data), 3
+        )
 
     def test_admin_can_promote_staff_to_admin(self) -> None:
         self._auth(self.admin)
@@ -98,8 +110,11 @@ class TeamManagementTestCase(APITestCase):
 
     def test_second_owner_can_be_deactivated_safely(self) -> None:
         second_owner = User.objects.create_user(
-            username="owner2", email="owner2@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="owner",
+            username="owner2",
+            email="owner2@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="owner",
         )
         self._auth(self.owner)
         url = reverse("users:deactivate", args=[second_owner.id])

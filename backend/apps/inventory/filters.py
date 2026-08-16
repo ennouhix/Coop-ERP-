@@ -1,4 +1,5 @@
 """Filtres pour les niveaux de stock et l'historique des mouvements."""
+
 from __future__ import annotations
 
 import django_filters
@@ -21,4 +22,11 @@ class StockMovementFilter(django_filters.FilterSet):
 
     class Meta:
         model = StockMovement
-        fields = ["product", "warehouse", "movement_type", "reason", "created_after", "created_before"]
+        fields = [
+            "product",
+            "warehouse",
+            "movement_type",
+            "reason",
+            "created_after",
+            "created_before",
+        ]

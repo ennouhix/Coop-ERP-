@@ -2,11 +2,23 @@ import { useTranslation } from "react-i18next";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { LoginPage } from "./features/auth/LoginPage";
+import { RegisterPage } from "./features/auth/RegisterPage";
+import { ActivateAccountPage } from "./features/auth/ActivateAccountPage";
+import { LandingPage } from "./features/landing/LandingPage";
 import { CooperativeSettingsPage } from "./features/cooperative/CooperativeSettingsPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { MemberCreatePage } from "./features/members/MemberCreatePage";
 import { MemberDetailPage } from "./features/members/MemberDetailPage";
 import { MembersListPage } from "./features/members/MembersListPage";
+import { ShareCreatePage } from "./features/shares/ShareCreatePage";
+import { ShareDetailPage } from "./features/shares/ShareDetailPage";
+import { SharesListPage } from "./features/shares/SharesListPage";
+import { AssemblyCreatePage } from "./features/assemblies/AssemblyCreatePage";
+import { AssemblyDetailPage } from "./features/assemblies/AssemblyDetailPage";
+import { AssembliesListPage } from "./features/assemblies/AssembliesListPage";
+import { ContributionCreatePage } from "./features/contributions/ContributionCreatePage";
+import { ContributionDetailPage } from "./features/contributions/ContributionDetailPage";
+import { ContributionsListPage } from "./features/contributions/ContributionsListPage";
 import { PartnerCreatePage } from "./features/partners/PartnerCreatePage";
 import { PartnerDetailPage } from "./features/partners/PartnerDetailPage";
 import { PartnersListPage } from "./features/partners/PartnersListPage";
@@ -55,7 +67,10 @@ export function App() {
   return (
     <LanguageProvider>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/activate-account" element={<ActivateAccountPage />} />
         <Route path="/invitations/accept" element={<AcceptInvitationPage />} />
 
         <Route
@@ -68,6 +83,15 @@ export function App() {
                   <Route path="/members" element={<MembersListPage />} />
                   <Route path="/members/new" element={<MemberCreatePage />} />
                   <Route path="/members/:id" element={<MemberDetailPage />} />
+                  <Route path="/shares" element={<SharesListPage />} />
+                  <Route path="/shares/new" element={<ShareCreatePage />} />
+                  <Route path="/shares/:id" element={<ShareDetailPage />} />
+                  <Route path="/assemblies" element={<AssembliesListPage />} />
+                  <Route path="/assemblies/new" element={<AssemblyCreatePage />} />
+                  <Route path="/assemblies/:id" element={<AssemblyDetailPage />} />
+                  <Route path="/contributions" element={<ContributionsListPage />} />
+                  <Route path="/contributions/new" element={<ContributionCreatePage />} />
+                  <Route path="/contributions/:id" element={<ContributionDetailPage />} />
                   <Route path="/partners" element={<PartnersListPage />} />
                   <Route path="/partners/new" element={<PartnerCreatePage />} />
                   <Route path="/partners/:id" element={<PartnerDetailPage />} />

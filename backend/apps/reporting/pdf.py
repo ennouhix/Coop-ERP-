@@ -13,6 +13,7 @@ selon que ces champs existent ou non sur vos modèles Invoice / Cooperative /
 InvoiceLine, via getattr(..., None). Ajoutez ces champs à vos modèles pour
 que les sections correspondantes apparaissent.
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -108,7 +109,9 @@ class _NumberedCanvas(pdf_canvas.Canvas):
             y -= 3.6 * mm
 
         self.setFont("Helvetica", 8)
-        self.drawRightString(width - 20 * mm, top_y - 5 * mm, f"Page {self._pageNumber} / {total_pages}")
+        self.drawRightString(
+            width - 20 * mm, top_y - 5 * mm, f"Page {self._pageNumber} / {total_pages}"
+        )
 
 
 def generate_invoice_pdf(invoice: Invoice) -> BytesIO:
@@ -124,7 +127,9 @@ def generate_invoice_pdf(invoice: Invoice) -> BytesIO:
     if logo_file and not logo_path:
         logo_path = getattr(logo_file, "path", None)
 
-    tax_identifier = _first_present(cooperative, "tax_identifier", "if_number", "identifiant_fiscal")
+    tax_identifier = _first_present(
+        cooperative, "tax_identifier", "if_number", "identifiant_fiscal"
+    )
     patente = _first_present(cooperative, "patente_number", "patente")
     cnss = _first_present(cooperative, "cnss_number", "cnss")
     bank_name = _first_present(cooperative, "bank_name")
@@ -140,42 +145,84 @@ def generate_invoice_pdf(invoice: Invoice) -> BytesIO:
     total_ttc = getattr(invoice, "total_ttc", None) or invoice.total_amount
 
     doc = SimpleDocTemplate(
-        buffer, pagesize=A4,
-        topMargin=18 * mm, bottomMargin=28 * mm, leftMargin=18 * mm, rightMargin=18 * mm,
+        buffer,
+        pagesize=A4,
+        topMargin=18 * mm,
+        bottomMargin=28 * mm,
+        leftMargin=18 * mm,
+        rightMargin=18 * mm,
     )
 
     styles = getSampleStyleSheet()
     style_company_name = ParagraphStyle(
-        "CompanyName", parent=styles["Normal"], fontName="Helvetica-Bold",
-        fontSize=15, leading=18, textColor=NAVY,
+        "CompanyName",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=15,
+        leading=18,
+        textColor=NAVY,
     )
     style_company_meta = ParagraphStyle(
-        "CompanyMeta", parent=styles["Normal"], fontSize=8.5, leading=12.5, textColor=GREY_TEXT,
+        "CompanyMeta",
+        parent=styles["Normal"],
+        fontSize=8.5,
+        leading=12.5,
+        textColor=GREY_TEXT,
     )
     style_doc_title = ParagraphStyle(
-        "DocTitle", parent=styles["Normal"], fontName="Helvetica-Bold",
-        fontSize=20, leading=23, textColor=NAVY, alignment=TA_RIGHT,
+        "DocTitle",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=20,
+        leading=23,
+        textColor=NAVY,
+        alignment=TA_RIGHT,
     )
     style_doc_meta_label = ParagraphStyle(
-        "DocMetaLabel", parent=styles["Normal"], fontSize=8.5, leading=13,
-        textColor=GREY_TEXT, alignment=TA_RIGHT,
+        "DocMetaLabel",
+        parent=styles["Normal"],
+        fontSize=8.5,
+        leading=13,
+        textColor=GREY_TEXT,
+        alignment=TA_RIGHT,
     )
     style_block_title = ParagraphStyle(
-        "BlockTitle", parent=styles["Normal"], fontName="Helvetica-Bold",
-        fontSize=8, leading=11, textColor=ACCENT, spaceAfter=4,
+        "BlockTitle",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=11,
+        textColor=ACCENT,
+        spaceAfter=4,
     )
     style_block_body = ParagraphStyle(
-        "BlockBody", parent=styles["Normal"], fontSize=9.5, leading=14, textColor=INK,
+        "BlockBody",
+        parent=styles["Normal"],
+        fontSize=9.5,
+        leading=14,
+        textColor=INK,
     )
-    style_cell = ParagraphStyle("Cell", parent=styles["Normal"], fontSize=9, leading=12.5, textColor=INK)
-    style_notes = ParagraphStyle("Notes", parent=styles["Normal"], fontSize=8.5, leading=13, textColor=GREY_TEXT)
+    style_cell = ParagraphStyle(
+        "Cell", parent=styles["Normal"], fontSize=9, leading=12.5, textColor=INK
+    )
+    style_notes = ParagraphStyle(
+        "Notes", parent=styles["Normal"], fontSize=8.5, leading=13, textColor=GREY_TEXT
+    )
     style_bank_title = ParagraphStyle(
-        "BankTitle", parent=styles["Normal"], fontName="Helvetica-Bold",
-        fontSize=8, leading=11, textColor=NAVY,
+        "BankTitle",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=8,
+        leading=11,
+        textColor=NAVY,
     )
     style_signature = ParagraphStyle(
-        "Signature", parent=styles["Normal"], fontSize=8.5, leading=12,
-        textColor=GREY_TEXT, alignment=TA_CENTER,
+        "Signature",
+        parent=styles["Normal"],
+        fontSize=8.5,
+        leading=12,
+        textColor=GREY_TEXT,
+        alignment=TA_CENTER,
     )
 
     elements = []
@@ -203,23 +250,34 @@ def generate_invoice_pdf(invoice: Invoice) -> BytesIO:
     status_label = "PAYÉE" if balance_due <= 0 else "EN ATTENTE DE RÈGLEMENT"
     status_color = PAID_GREEN if balance_due <= 0 else colors.HexColor("#b06a00")
     style_status = ParagraphStyle(
-        "Status", parent=style_doc_meta_label, fontName="Helvetica-Bold", textColor=status_color,
+        "Status",
+        parent=style_doc_meta_label,
+        fontName="Helvetica-Bold",
+        textColor=status_color,
     )
 
     right_cell = [
         Paragraph("FACTURE", style_doc_title),
         Spacer(1, 2 * mm),
         Paragraph(f"N° {invoice.invoice_number}", style_doc_meta_label),
-        Paragraph(f"Date d'émission : {invoice.issue_date.strftime('%d/%m/%Y')}", style_doc_meta_label),
-        Paragraph(f"Date d'échéance : {invoice.due_date.strftime('%d/%m/%Y')}", style_doc_meta_label),
+        Paragraph(
+            f"Date d'émission : {invoice.issue_date.strftime('%d/%m/%Y')}", style_doc_meta_label
+        ),
+        Paragraph(
+            f"Date d'échéance : {invoice.due_date.strftime('%d/%m/%Y')}", style_doc_meta_label
+        ),
         Spacer(1, 1.5 * mm),
         Paragraph(status_label, style_status),
     ]
 
     header_table = Table([[left_cell, right_cell]], colWidths=[100 * mm, 74 * mm])
-    header_table.setStyle(TableStyle([
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-    ]))
+    header_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]
+        )
+    )
     elements.append(header_table)
     elements.append(Spacer(1, 4 * mm))
     elements.append(HRFlowable(width="100%", thickness=1.2, color=NAVY))
@@ -265,24 +323,28 @@ def generate_invoice_pdf(invoice: Invoice) -> BytesIO:
         [[issuer_block, customer_block, conditions_block]],
         colWidths=[58 * mm, 58 * mm, 58 * mm],
     )
-    parties_table.setStyle(TableStyle([
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("BACKGROUND", (0, 0), (-1, -1), LIGHT_BG),
-        ("BOX", (0, 0), (0, 0), 0.5, BORDER),
-        ("BOX", (1, 0), (1, 0), 0.5, BORDER),
-        ("BOX", (2, 0), (2, 0), 0.5, BORDER),
-        ("LEFTPADDING", (0, 0), (-1, -1), 9),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 9),
-        ("TOPPADDING", (0, 0), (-1, -1), 9),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 9),
-    ]))
+    parties_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("BACKGROUND", (0, 0), (-1, -1), LIGHT_BG),
+                ("BOX", (0, 0), (0, 0), 0.5, BORDER),
+                ("BOX", (1, 0), (1, 0), 0.5, BORDER),
+                ("BOX", (2, 0), (2, 0), 0.5, BORDER),
+                ("LEFTPADDING", (0, 0), (-1, -1), 9),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 9),
+                ("TOPPADDING", (0, 0), (-1, -1), 9),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 9),
+            ]
+        )
+    )
     elements.append(parties_table)
     elements.append(Spacer(1, 9 * mm))
 
     # ======================================================================
     # LIGNES DE FACTURE (numérotées, avec remise si présente sur la ligne)
     # ======================================================================
-    has_discount = any(getattr(l, "discount_percent", None) for l in invoice.lines.all())
+    has_discount = any(getattr(ln, "discount_percent", None) for ln in invoice.lines.all())
 
     header_row = ["N°", "DÉSIGNATION", "QTÉ", "PU HT"]
     if has_discount:
@@ -311,21 +373,25 @@ def generate_invoice_pdf(invoice: Invoice) -> BytesIO:
 
     lines_table = Table(table_data, colWidths=col_widths, repeatRows=1)
     align_from_col = 2
-    lines_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), NAVY),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, 0), 8),
-        ("FONTSIZE", (0, 1), (-1, -1), 9),
-        ("ALIGN", (0, 0), (0, -1), "CENTER"),
-        ("ALIGN", (align_from_col, 0), (-1, -1), "RIGHT"),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("GRID", (0, 0), (-1, -1), 0.4, BORDER),
-        ("TOPPADDING", (0, 0), (-1, -1), 6.5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6.5),
-        ("LEFTPADDING", (0, 0), (-1, -1), 7),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
-    ]))
+    lines_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 8),
+                ("FONTSIZE", (0, 1), (-1, -1), 9),
+                ("ALIGN", (0, 0), (0, -1), "CENTER"),
+                ("ALIGN", (align_from_col, 0), (-1, -1), "RIGHT"),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("GRID", (0, 0), (-1, -1), 0.4, BORDER),
+                ("TOPPADDING", (0, 0), (-1, -1), 6.5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6.5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 7),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+            ]
+        )
+    )
     elements.append(lines_table)
     elements.append(Spacer(1, 7 * mm))
 
@@ -354,37 +420,45 @@ def generate_invoice_pdf(invoice: Invoice) -> BytesIO:
         total_rows + [["Net à payer", _money(balance_due)]],
         colWidths=[TOTALS_INNER_WIDTH - 40 * mm, 40 * mm],
     )
-    totals_inner.setStyle(TableStyle([
-        ("FONTSIZE", (0, 0), (-1, -1), 9.5),
-        ("ALIGN", (1, 0), (1, -1), "RIGHT"),
-        ("TEXTCOLOR", (0, 0), (0, -2), GREY_TEXT),
-        ("LINEABOVE", (0, -1), (-1, -1), 0.75, NAVY),
-        ("TOPPADDING", (0, -1), (-1, -1), 8),
-        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
-        ("FONTSIZE", (0, -1), (-1, -1), 12),
-        ("TEXTCOLOR", (1, -1), (1, -1), balance_color),
-        ("TEXTCOLOR", (0, -1), (0, -1), NAVY),
-        ("TOPPADDING", (0, 0), (-1, -2), 4),
-        ("BOTTOMPADDING", (0, 0), (-1, -2), 4),
-        ("LEFTPADDING", (0, 0), (-1, -1), 0),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-    ]))
+    totals_inner.setStyle(
+        TableStyle(
+            [
+                ("FONTSIZE", (0, 0), (-1, -1), 9.5),
+                ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+                ("TEXTCOLOR", (0, 0), (0, -2), GREY_TEXT),
+                ("LINEABOVE", (0, -1), (-1, -1), 0.75, NAVY),
+                ("TOPPADDING", (0, -1), (-1, -1), 8),
+                ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+                ("FONTSIZE", (0, -1), (-1, -1), 12),
+                ("TEXTCOLOR", (1, -1), (1, -1), balance_color),
+                ("TEXTCOLOR", (0, -1), (0, -1), NAVY),
+                ("TOPPADDING", (0, 0), (-1, -2), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -2), 4),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+    )
 
     totals_wrapper = Table(
         [["", totals_inner]],
         colWidths=[174 * mm - TOTALS_BOX_WIDTH, TOTALS_BOX_WIDTH],
     )
-    totals_wrapper.setStyle(TableStyle([
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("BOX", (1, 0), (1, 0), 0.5, BORDER),
-        ("BACKGROUND", (1, 0), (1, 0), LIGHT_BG),
-        ("LEFTPADDING", (1, 0), (1, 0), TOTALS_BOX_PADDING),
-        ("RIGHTPADDING", (1, 0), (1, 0), TOTALS_BOX_PADDING),
-        ("TOPPADDING", (1, 0), (1, 0), 8),
-        ("BOTTOMPADDING", (1, 0), (1, 0), 8),
-        ("LEFTPADDING", (0, 0), (0, 0), 0),
-        ("RIGHTPADDING", (0, 0), (0, 0), 0),
-    ]))
+    totals_wrapper.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("BOX", (1, 0), (1, 0), 0.5, BORDER),
+                ("BACKGROUND", (1, 0), (1, 0), LIGHT_BG),
+                ("LEFTPADDING", (1, 0), (1, 0), TOTALS_BOX_PADDING),
+                ("RIGHTPADDING", (1, 0), (1, 0), TOTALS_BOX_PADDING),
+                ("TOPPADDING", (1, 0), (1, 0), 8),
+                ("BOTTOMPADDING", (1, 0), (1, 0), 8),
+                ("LEFTPADDING", (0, 0), (0, 0), 0),
+                ("RIGHTPADDING", (0, 0), (0, 0), 0),
+            ]
+        )
+    )
     elements.append(totals_wrapper)
     elements.append(Spacer(1, 10 * mm))
 
@@ -430,11 +504,14 @@ def generate_invoice_pdf(invoice: Invoice) -> BytesIO:
 
     # --- Mention légale de pénalités de retard (obligatoire au Maroc) -------
     elements.append(Spacer(1, 6 * mm))
-    elements.append(Paragraph(
-        "Conformément à la réglementation en vigueur, tout retard de paiement au-delà de la date "
-        "d'échéance pourra donner lieu à des pénalités de retard.",
-        style_notes,
-    ))
+    elements.append(
+        Paragraph(
+            "Conformément à la réglementation en vigueur, "
+            "tout retard de paiement au-delà de la date "
+            "d'échéance pourra donner lieu à des pénalités de retard.",
+            style_notes,
+        )
+    )
 
     # ======================================================================
     # PIED DE PAGE : identifiants légaux complets + pagination
@@ -462,6 +539,7 @@ def generate_invoice_pdf(invoice: Invoice) -> BytesIO:
     buffer.seek(0)
     return buffer
 
+
 def generate_report_pdf(
     cooperative,
     title: str,
@@ -473,28 +551,52 @@ def generate_report_pdf(
     buffer = BytesIO()
 
     doc = SimpleDocTemplate(
-        buffer, pagesize=A4,
-        topMargin=14 * mm, bottomMargin=20 * mm, leftMargin=14 * mm, rightMargin=14 * mm,
+        buffer,
+        pagesize=A4,
+        topMargin=14 * mm,
+        bottomMargin=20 * mm,
+        leftMargin=14 * mm,
+        rightMargin=14 * mm,
     )
 
     styles = getSampleStyleSheet()
     style_title = ParagraphStyle(
-        "ReportTitle", parent=styles["Normal"], fontName="Helvetica-Bold",
-        fontSize=15, leading=18, textColor=NAVY,
+        "ReportTitle",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=15,
+        leading=18,
+        textColor=NAVY,
     )
     style_coop = ParagraphStyle(
-        "ReportCoop", parent=styles["Normal"], fontName="Helvetica-Bold",
-        fontSize=9, leading=12, textColor=GREY_TEXT,
+        "ReportCoop",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=9,
+        leading=12,
+        textColor=GREY_TEXT,
     )
     style_subtitle = ParagraphStyle(
-        "ReportSubtitle", parent=styles["Normal"], fontSize=8, leading=11, textColor=GREY_TEXT,
+        "ReportSubtitle",
+        parent=styles["Normal"],
+        fontSize=8,
+        leading=11,
+        textColor=GREY_TEXT,
     )
     style_cell = ParagraphStyle(
-        "ReportCell", parent=styles["Normal"], fontSize=7.8, leading=10.5, textColor=INK,
+        "ReportCell",
+        parent=styles["Normal"],
+        fontSize=7.8,
+        leading=10.5,
+        textColor=INK,
     )
     style_head = ParagraphStyle(
-        "ReportHead", parent=styles["Normal"], fontName="Helvetica-Bold",
-        fontSize=7.8, leading=10, textColor=colors.white,
+        "ReportHead",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=7.8,
+        leading=10,
+        textColor=colors.white,
     )
 
     legal_bits = [cooperative.name]
@@ -507,8 +609,22 @@ def generate_report_pdf(
         footer_lines.append(cooperative.address)
 
     elements = []
+
+    # --- Logo (si disponible) -----------------------------------------------
+    logo_file = getattr(cooperative, "logo", None)
+    logo_path = getattr(logo_file, "path", None) if logo_file else None
+
+    left_cell = []
+    if logo_path:
+        try:
+            left_cell.append(Image(logo_path, width=32 * mm, height=32 * mm, kind="proportional"))
+            left_cell.append(Spacer(1, 3 * mm))
+        except Exception:
+            pass
+    left_cell.append(Paragraph(cooperative.name, style_coop))
+
     header_table = Table(
-        [[Paragraph(cooperative.name, style_coop), Paragraph(title, style_title)]],
+        [[left_cell, Paragraph(title, style_title)]],
         colWidths=[100 * mm, 82 * mm],
     )
     header_table.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
@@ -531,16 +647,20 @@ def generate_report_pdf(
             for row in rows
         ]
         report_table = Table(table_data, repeatRows=1)
-        report_table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), NAVY),
-            ("GRID", (0, 0), (-1, -1), 0.3, BORDER),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT_BG]),
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("TOPPADDING", (0, 0), (-1, -1), 3.5),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 3.5),
-            ("LEFTPADDING", (0, 0), (-1, -1), 5),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-        ]))
+        report_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+                    ("GRID", (0, 0), (-1, -1), 0.3, BORDER),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT_BG]),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3.5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3.5),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                ]
+            )
+        )
         elements.append(report_table)
 
     doc.build(

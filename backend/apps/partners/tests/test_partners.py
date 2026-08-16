@@ -1,6 +1,7 @@
 """
 Tests du module partners.
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
@@ -11,7 +12,6 @@ from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.cooperatives.models import Cooperative
-from apps.partners.models import Partner
 from apps.partners.services import create_partner
 
 User = get_user_model()
@@ -27,16 +27,24 @@ VALID_CUSTOMER_PAYLOAD = {
 class PartnerTestCase(APITestCase):
     def setUp(self) -> None:
         cache.clear()
-        self.cooperative = Cooperative.objects.create(name="Coopérative Argane Sud", slug="argane-sud")
+        self.cooperative = Cooperative.objects.create(
+            name="Coopérative Argane Sud", slug="argane-sud"
+        )
         self.other_cooperative = Cooperative.objects.create(name="Autre Coop", slug="autre")
 
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
         self.foreign_user = User.objects.create_user(
-            username="foreign", email="foreign@autre.ma", password="MotDePasseSolide123",
-            cooperative=self.other_cooperative, role="owner",
+            username="foreign",
+            email="foreign@autre.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.other_cooperative,
+            role="owner",
         )
 
         self.list_url = reverse("partners:list-create")
@@ -73,7 +81,9 @@ class PartnerTestCase(APITestCase):
         self.assertTrue(response.data["is_supplier"])
 
     def test_duplicate_ice_in_same_cooperative_rejected(self) -> None:
-        create_partner(cooperative=self.cooperative, ice="001234567000012", **VALID_CUSTOMER_PAYLOAD)
+        create_partner(
+            cooperative=self.cooperative, ice="001234567000012", **VALID_CUSTOMER_PAYLOAD
+        )
         self._auth(self.staff)
         duplicate = {**VALID_CUSTOMER_PAYLOAD, "name": "Autre", "ice": "001234567000012"}
         response = self.client.post(self.list_url, duplicate)
@@ -89,8 +99,11 @@ class PartnerTestCase(APITestCase):
     def test_filter_by_is_supplier(self) -> None:
         create_partner(cooperative=self.cooperative, **VALID_CUSTOMER_PAYLOAD)
         create_partner(
-            cooperative=self.cooperative, is_customer=False, is_supplier=True,
-            name="Fournisseur Emballages", phone_number="0611111111",
+            cooperative=self.cooperative,
+            is_customer=False,
+            is_supplier=True,
+            name="Fournisseur Emballages",
+            phone_number="0611111111",
         )
         self._auth(self.staff)
         response = self.client.get(self.list_url, {"is_supplier": "true"})

@@ -5,6 +5,7 @@ Couvre : login réussi/échoué, claims JWT, throttle anti brute-force,
 refresh token, logout + blacklist, endpoint /me, changement de mot de passe
 et son effet sur les tokens existants.
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model

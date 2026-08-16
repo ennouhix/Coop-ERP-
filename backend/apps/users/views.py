@@ -11,6 +11,7 @@ Endpoints :
 - DELETE /api/v1/users/invitations/{id}/     -> annuler une invitation
 - POST   /api/v1/users/invitations/accept/   -> accepter une invitation (public)
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
@@ -83,9 +84,7 @@ class ReactivateUserView(APIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, IsOwnerOrAdmin]
 
     def post(self, request: Request, user_id: str) -> Response:
-        target = get_object_or_404(
-            User, pk=user_id, cooperative_id=request.user.cooperative_id
-        )
+        target = get_object_or_404(User, pk=user_id, cooperative_id=request.user.cooperative_id)
         services.reactivate_user(target_user=target)
         return Response(TeamMemberSerializer(target).data, status=status.HTTP_200_OK)
 

@@ -5,6 +5,7 @@ Toute table métier appartenant à une coopérative doit hériter de
 TenantBaseModel (sauf tables globales : User, Cooperative elle-même,
 tables de configuration système).
 """
+
 from __future__ import annotations
 
 import uuid
@@ -104,8 +105,8 @@ class TenantBaseModel(BaseModel):
         db_index=True,
     )
 
-    objects = TenantManager()
     all_objects = models.Manager()  # accès non filtré : scripts admin, migrations, Celery système
+    objects = TenantManager()
 
     class Meta:
         abstract = True

@@ -7,6 +7,7 @@ Principe : StockMovement (immuable) est TOUJOURS créé dans la même
 transaction que la mise à jour de StockLevel (dénormalisé). Jamais l'un
 sans l'autre.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -43,7 +44,10 @@ def _get_or_create_locked_stock_level(*, product: Product, warehouse: Warehouse)
         try:
             with transaction.atomic():  # savepoint : isole l'éventuel IntegrityError
                 return StockLevel.objects.create(
-                    cooperative=product.cooperative, product=product, warehouse=warehouse, quantity=Decimal("0")
+                    cooperative=product.cooperative,
+                    product=product,
+                    warehouse=warehouse,
+                    quantity=Decimal("0"),
                 )
         except IntegrityError:
             return StockLevel.objects.select_for_update().get(product=product, warehouse=warehouse)
@@ -56,8 +60,14 @@ def _validate_quantity(quantity: Decimal) -> None:
 
 @transaction.atomic
 def record_stock_in(
-    *, product: Product, warehouse: Warehouse, quantity: Decimal, actor,  # noqa: ANN001
-    reason: str = StockMovementReason.ADJUSTMENT, reference: str = "", notes: str = "",
+    *,
+    product: Product,
+    warehouse: Warehouse,
+    quantity: Decimal,
+    actor,  # noqa: ANN001
+    reason: str = StockMovementReason.ADJUSTMENT,
+    reference: str = "",
+    notes: str = "",
 ) -> StockMovement:
     _validate_quantity(quantity)
 
@@ -66,13 +76,22 @@ def record_stock_in(
     level.save(update_fields=["quantity"])
 
     movement = StockMovement.objects.create(
-        cooperative=product.cooperative, movement_type=StockMovementType.IN, reason=reason,
-        product=product, warehouse=warehouse, quantity=quantity,
-        reference=reference, notes=notes, created_by=actor,
+        cooperative=product.cooperative,
+        movement_type=StockMovementType.IN,
+        reason=reason,
+        product=product,
+        warehouse=warehouse,
+        quantity=quantity,
+        reference=reference,
+        notes=notes,
+        created_by=actor,
     )
     log_activity(
-        cooperative=product.cooperative, actor=actor, action="stock.in",
-        target_type="StockMovement", target_id=movement.id,
+        cooperative=product.cooperative,
+        actor=actor,
+        action="stock.in",
+        target_type="StockMovement",
+        target_id=movement.id,
         target_repr=f"{product.sku} +{quantity} @ {warehouse.code}",
         metadata={"reason": reason, "reference": reference},
     )
@@ -81,8 +100,14 @@ def record_stock_in(
 
 @transaction.atomic
 def record_stock_out(
-    *, product: Product, warehouse: Warehouse, quantity: Decimal, actor,  # noqa: ANN001
-    reason: str = StockMovementReason.ADJUSTMENT, reference: str = "", notes: str = "",
+    *,
+    product: Product,
+    warehouse: Warehouse,
+    quantity: Decimal,
+    actor,  # noqa: ANN001
+    reason: str = StockMovementReason.ADJUSTMENT,
+    reference: str = "",
+    notes: str = "",
 ) -> StockMovement:
     _validate_quantity(quantity)
 
@@ -97,13 +122,22 @@ def record_stock_out(
     level.save(update_fields=["quantity"])
 
     movement = StockMovement.objects.create(
-        cooperative=product.cooperative, movement_type=StockMovementType.OUT, reason=reason,
-        product=product, warehouse=warehouse, quantity=quantity,
-        reference=reference, notes=notes, created_by=actor,
+        cooperative=product.cooperative,
+        movement_type=StockMovementType.OUT,
+        reason=reason,
+        product=product,
+        warehouse=warehouse,
+        quantity=quantity,
+        reference=reference,
+        notes=notes,
+        created_by=actor,
     )
     log_activity(
-        cooperative=product.cooperative, actor=actor, action="stock.out",
-        target_type="StockMovement", target_id=movement.id,
+        cooperative=product.cooperative,
+        actor=actor,
+        action="stock.out",
+        target_type="StockMovement",
+        target_id=movement.id,
         target_repr=f"{product.sku} -{quantity} @ {warehouse.code}",
         metadata={"reason": reason, "reference": reference},
     )
@@ -112,25 +146,37 @@ def record_stock_out(
 
 @transaction.atomic
 def record_stock_transfer(
-    *, product: Product, from_warehouse: Warehouse, to_warehouse: Warehouse, quantity: Decimal, actor,  # noqa: ANN001
-    reference: str = "", notes: str = "",
+    *,
+    product: Product,
+    from_warehouse: Warehouse,
+    to_warehouse: Warehouse,
+    quantity: Decimal,
+    actor,  # noqa: ANN001
+    reference: str = "",
+    notes: str = "",
 ) -> StockMovement:
     if from_warehouse.pk == to_warehouse.pk:
-        raise InvalidMovementError("L'entrepôt source et l'entrepôt destination doivent être différents.")
+        raise InvalidMovementError(
+            "L'entrepôt source et l'entrepôt destination doivent être différents."
+        )
     _validate_quantity(quantity)
 
     # Verrou toujours pris dans le même ordre (par pk d'entrepôt croissant)
     # pour empêcher un deadlock entre deux transferts concurrents en sens
     # opposé (A->B en même temps que B->A).
     warehouses_by_pk = sorted([from_warehouse, to_warehouse], key=lambda w: str(w.pk))
-    locked = {w.pk: _get_or_create_locked_stock_level(product=product, warehouse=w) for w in warehouses_by_pk}
+    locked = {
+        w.pk: _get_or_create_locked_stock_level(product=product, warehouse=w)
+        for w in warehouses_by_pk
+    }
 
     source_level = locked[from_warehouse.pk]
     dest_level = locked[to_warehouse.pk]
 
     if source_level.quantity < quantity:
         raise InsufficientStockError(
-            f"Stock insuffisant dans l'entrepôt source : {source_level.quantity} {product.unit.symbol} disponible(s)."
+            f"Stock insuffisant dans l'entrepôt source : "
+            f"{source_level.quantity} {product.unit.symbol} disponible(s)."
         )
 
     source_level.quantity -= quantity
@@ -139,14 +185,23 @@ def record_stock_transfer(
     dest_level.save(update_fields=["quantity"])
 
     movement = StockMovement.objects.create(
-        cooperative=product.cooperative, movement_type=StockMovementType.TRANSFER,
+        cooperative=product.cooperative,
+        movement_type=StockMovementType.TRANSFER,
         reason=StockMovementReason.TRANSFER,
-        product=product, warehouse=from_warehouse, destination_warehouse=to_warehouse,
-        quantity=quantity, reference=reference, notes=notes, created_by=actor,
+        product=product,
+        warehouse=from_warehouse,
+        destination_warehouse=to_warehouse,
+        quantity=quantity,
+        reference=reference,
+        notes=notes,
+        created_by=actor,
     )
     log_activity(
-        cooperative=product.cooperative, actor=actor, action="stock.transfer",
-        target_type="StockMovement", target_id=movement.id,
+        cooperative=product.cooperative,
+        actor=actor,
+        action="stock.transfer",
+        target_type="StockMovement",
+        target_id=movement.id,
         target_repr=f"{product.sku} {quantity} {from_warehouse.code} -> {to_warehouse.code}",
         metadata={"reference": reference},
     )

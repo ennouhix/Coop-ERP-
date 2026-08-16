@@ -1,4 +1,5 @@
 """Filtres pour la liste des partenaires."""
+
 from __future__ import annotations
 
 import django_filters

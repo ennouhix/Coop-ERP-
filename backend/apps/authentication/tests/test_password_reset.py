@@ -1,6 +1,7 @@
 """
 Tests du flux de réinitialisation de mot de passe.
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model

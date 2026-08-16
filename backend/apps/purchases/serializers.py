@@ -8,6 +8,7 @@ PrimaryKeyRelatedField(queryset=Model.objects.all()) déclaré en dur dans
 un Serializer non généré par ModelSerializer (voir la docstring détaillée
 dans apps/inventory/serializers.py pour le piège que ça évite).
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -26,9 +27,15 @@ class PurchaseOrderLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseOrderLine
         fields = [
-            "id", "product", "product_sku", "product_name",
-            "quantity_ordered", "quantity_received", "quantity_remaining",
-            "unit_price", "line_total",
+            "id",
+            "product",
+            "product_sku",
+            "product_name",
+            "quantity_ordered",
+            "quantity_received",
+            "quantity_remaining",
+            "unit_price",
+            "line_total",
         ]
         read_only_fields = fields
 
@@ -47,16 +54,29 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = [
-            "id", "order_number", "supplier", "supplier_name", "warehouse", "warehouse_code",
-            "status", "order_date", "expected_delivery_date", "notes",
-            "lines", "total_amount", "created_at", "updated_at",
+            "id",
+            "order_number",
+            "supplier",
+            "supplier_name",
+            "warehouse",
+            "warehouse_code",
+            "status",
+            "order_date",
+            "expected_delivery_date",
+            "notes",
+            "lines",
+            "total_amount",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "order_number", "status", "created_at", "updated_at"]
 
 
 class PurchaseOrderLineInputSerializer(serializers.Serializer):
     product_id = serializers.UUIDField()
-    quantity_ordered = serializers.DecimalField(max_digits=14, decimal_places=3, min_value=Decimal("0.001"))
+    quantity_ordered = serializers.DecimalField(
+        max_digits=14, decimal_places=3, min_value=Decimal("0.001")
+    )
     unit_price = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("0"))
 
 

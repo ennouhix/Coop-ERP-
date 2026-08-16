@@ -1,4 +1,5 @@
 """Configuration spécifique à l'environnement de production."""
+
 from decouple import Csv, config
 
 from .base import *  # noqa: F401,F403

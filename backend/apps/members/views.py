@@ -8,7 +8,13 @@ Endpoints :
 - PATCH  /api/v1/members/{id}/           -> modifier
 - POST   /api/v1/members/{id}/deactivate/ -> désactiver
 - POST   /api/v1/members/{id}/reactivate/ -> réactiver
+
+Parts sociales :
+- GET    /api/v1/members/shares/         -> historique des mouvements
+- POST   /api/v1/members/shares/         -> souscription ou retrait de parts
+- GET    /api/v1/members/shares/{id}/    -> détail d'un mouvement
 """
+
 from __future__ import annotations
 
 from django.shortcuts import get_object_or_404
@@ -20,9 +26,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.authentication.permissions import IsCooperativeMember
-from apps.members.filters import MemberFilter
-from apps.members.models import Member
-from apps.members.serializers import MemberCreateSerializer, MemberSerializer
+from apps.members import services
+from apps.members.filters import MemberFilter, ShareTransactionFilter
+from apps.members.models import Member, ShareTransaction, ShareTransactionType
+from apps.members.serializers import (
+    MemberCreateSerializer,
+    MemberSerializer,
+    ShareTransactionCreateSerializer,
+    ShareTransactionSerializer,
+)
 from apps.members.services import create_member
 from apps.roles_permissions.permissions import RequirePermission
 
@@ -107,3 +119,73 @@ class MemberReactivateView(APIView):
         member.is_active = True
         member.save(update_fields=["status", "is_active"])
         return Response(MemberSerializer(member).data, status=status.HTTP_200_OK)
+
+
+class ShareTransactionListCreateView(generics.ListCreateAPIView):
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_class = ShareTransactionFilter
+    ordering_fields = ["transaction_date", "created_at"]
+
+    def get_queryset(self):  # noqa: ANN201
+        return ShareTransaction.all_objects.filter(
+            cooperative_id=self.request.user.cooperative_id
+        ).select_related("member")
+
+    def get_permissions(self):  # noqa: ANN201
+        base = [IsAuthenticated(), IsCooperativeMember()]
+        code = "members.edit" if self.request.method == "POST" else "members.view"
+        base.append(RequirePermission(code)())
+        return base
+
+    def get_serializer_class(self):  # noqa: ANN201
+        return (
+            ShareTransactionCreateSerializer
+            if self.request.method == "POST"
+            else ShareTransactionSerializer
+        )
+
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        serializer = ShareTransactionCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        member = get_object_or_404(
+            Member, pk=data["member_id"], cooperative_id=request.user.cooperative_id
+        )
+        try:
+            if data["transaction_type"] == ShareTransactionType.REDEMPTION:
+                record = services.redeem_shares(
+                    cooperative=request.user.cooperative,
+                    member=member,
+                    shares_count=data["shares_count"],
+                    amount_per_share=data["amount_per_share"],
+                    transaction_date=data.get("transaction_date"),
+                    notes=data["notes"],
+                )
+            else:
+                record = services.subscribe_shares(
+                    cooperative=request.user.cooperative,
+                    member=member,
+                    shares_count=data["shares_count"],
+                    amount_per_share=data["amount_per_share"],
+                    transaction_date=data.get("transaction_date"),
+                    notes=data["notes"],
+                )
+        except services.InvalidSharesError as exc:
+            return Response({"error": {"message": str(exc)}}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(ShareTransactionSerializer(record).data, status=status.HTTP_201_CREATED)
+
+
+class ShareTransactionDetailView(generics.RetrieveAPIView):
+    """Lecture seule d'un mouvement de parts (le ledger des parts est immuable)."""
+
+    serializer_class = ShareTransactionSerializer
+
+    def get_queryset(self):  # noqa: ANN201
+        return ShareTransaction.all_objects.filter(
+            cooperative_id=self.request.user.cooperative_id
+        ).select_related("member")
+
+    def get_permissions(self):  # noqa: ANN201
+        return [IsAuthenticated(), IsCooperativeMember(), RequirePermission("members.view")()]

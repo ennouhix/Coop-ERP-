@@ -258,7 +258,7 @@ export function InvoiceDetailPage() {
               <tfoot className="border-t-2 border-ink-300">
                 <tr>
                   <td colSpan={3} className="py-2 text-end font-medium text-ink-700">
-                    {t("Total   :")}
+                    {t("billing.field.total")}
                   </td>
                   <td className="py-2 text-end font-semibold text-ink-900">
                     {formatMoney(invoice.total_amount)}

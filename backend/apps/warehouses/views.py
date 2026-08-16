@@ -8,6 +8,7 @@ Endpoints :
 - POST       /api/v1/warehouses/{id}/deactivate/     -> désactivation
 - POST       /api/v1/warehouses/{id}/reactivate/     -> réactivation
 """
+
 from __future__ import annotations
 
 from django.shortcuts import get_object_or_404
@@ -35,7 +36,9 @@ class _WarehousePermissionMixin:
 
 class WarehouseListCreateView(_WarehousePermissionMixin, generics.ListCreateAPIView):
     def get_queryset(self):  # noqa: ANN201
-        return Warehouse.all_objects.filter(cooperative_id=self.request.user.cooperative_id).select_related("manager")
+        return Warehouse.all_objects.filter(
+            cooperative_id=self.request.user.cooperative_id
+        ).select_related("manager")
 
     def get_serializer_class(self):  # noqa: ANN201
         return WarehouseCreateSerializer if self.request.method == "POST" else WarehouseSerializer
@@ -43,7 +46,9 @@ class WarehouseListCreateView(_WarehousePermissionMixin, generics.ListCreateAPIV
     def create(self, request: Request, *args, **kwargs) -> Response:
         serializer = WarehouseCreateSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        warehouse = create_warehouse(cooperative=request.user.cooperative, **serializer.validated_data)
+        warehouse = create_warehouse(
+            cooperative=request.user.cooperative, **serializer.validated_data
+        )
         return Response(WarehouseSerializer(warehouse).data, status=status.HTTP_201_CREATED)
 
 
@@ -51,11 +56,17 @@ class WarehouseDetailView(_WarehousePermissionMixin, generics.RetrieveUpdateAPIV
     serializer_class = WarehouseSerializer
 
     def get_queryset(self):  # noqa: ANN201
-        return Warehouse.all_objects.filter(cooperative_id=self.request.user.cooperative_id).select_related("manager")
+        return Warehouse.all_objects.filter(
+            cooperative_id=self.request.user.cooperative_id
+        ).select_related("manager")
 
 
 class WarehouseSetDefaultView(APIView):
-    permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("warehouses.edit")]
+    permission_classes = [
+        IsAuthenticated,
+        IsCooperativeMember,
+        RequirePermission("warehouses.edit"),
+    ]
 
     def post(self, request: Request, warehouse_id: str) -> Response:
         warehouse = get_object_or_404(
@@ -66,7 +77,11 @@ class WarehouseSetDefaultView(APIView):
 
 
 class WarehouseDeactivateView(APIView):
-    permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("warehouses.edit")]
+    permission_classes = [
+        IsAuthenticated,
+        IsCooperativeMember,
+        RequirePermission("warehouses.edit"),
+    ]
 
     def post(self, request: Request, warehouse_id: str) -> Response:
         warehouse = get_object_or_404(
@@ -74,7 +89,14 @@ class WarehouseDeactivateView(APIView):
         )
         if warehouse.is_default:
             return Response(
-                {"error": {"message": "Impossible de désactiver l'entrepôt par défaut. Définissez-en un autre d'abord."}},
+                {
+                    "error": {
+                        "message": (
+                        "Impossible de désactiver l'entrepôt par défaut. "
+                        "Définissez-en un autre d'abord."
+                    )
+                    }
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         warehouse.is_active = False
@@ -83,7 +105,11 @@ class WarehouseDeactivateView(APIView):
 
 
 class WarehouseReactivateView(APIView):
-    permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("warehouses.edit")]
+    permission_classes = [
+        IsAuthenticated,
+        IsCooperativeMember,
+        RequirePermission("warehouses.edit"),
+    ]
 
     def post(self, request: Request, warehouse_id: str) -> Response:
         warehouse = get_object_or_404(

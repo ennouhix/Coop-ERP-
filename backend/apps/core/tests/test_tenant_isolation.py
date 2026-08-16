@@ -5,6 +5,7 @@ coopératives. Ce test doit rester vert en permanence — s'il échoue, c'est
 qu'un modèle vient d'être ajouté sans isolation tenant et NE DOIT PAS être
 mergé tel quel.
 """
+
 from __future__ import annotations
 
 from django.apps import apps
@@ -28,7 +29,13 @@ class TenantIsolationTestCase(TestCase):
 
             if label in EXEMPT_MODELS:
                 continue
-            if model._meta.app_label in {"admin", "auth", "contenttypes", "sessions", "token_blacklist"}:
+            if model._meta.app_label in {
+                "admin",
+                "auth",
+                "contenttypes",
+                "sessions",
+                "token_blacklist",
+            }:
                 continue
             if model.__module__.startswith("django."):
                 continue

@@ -10,6 +10,7 @@ Endpoints :
   GET       /api/v1/accounting/ledger/               -> grand livre
   GET       /api/v1/accounting/trial-balance/        -> balance des comptes
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -38,8 +39,8 @@ from apps.accounting.serializers import (
 from apps.authentication.permissions import IsCooperativeMember
 from apps.roles_permissions.permissions import RequirePermission
 
-
 # ---- Plan comptable ----
+
 
 class AccountListCreateView(generics.ListCreateAPIView):
     """GET : liste du plan comptable  |  POST : créer un sous-compte personnalisé."""
@@ -65,17 +66,23 @@ class AccountListCreateView(generics.ListCreateAPIView):
 
 # ---- Journaux ----
 
+
 class JournalListView(generics.ListAPIView):
     """GET : liste des journaux comptables."""
 
     serializer_class = JournalSerializer
-    permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("accounting.view")]
+    permission_classes = [
+        IsAuthenticated,
+        IsCooperativeMember,
+        RequirePermission("accounting.view"),
+    ]
 
     def get_queryset(self):  # noqa: ANN201
         return Journal.objects.all()
 
 
 # ---- Écritures comptables ----
+
 
 class AccountingEntryListCreateView(generics.ListCreateAPIView):
     """GET : liste des écritures  |  POST : créer une écriture en brouillon."""
@@ -86,8 +93,7 @@ class AccountingEntryListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):  # noqa: ANN201
         return (
-            AccountingEntry.objects
-            .select_related("journal")
+            AccountingEntry.objects.select_related("journal")
             .prefetch_related("lines__account")
             .all()
         )
@@ -99,7 +105,11 @@ class AccountingEntryListCreateView(generics.ListCreateAPIView):
         return base
 
     def get_serializer_class(self):  # noqa: ANN201
-        return AccountingEntryCreateSerializer if self.request.method == "POST" else AccountingEntrySerializer
+        return (
+            AccountingEntryCreateSerializer
+            if self.request.method == "POST"
+            else AccountingEntrySerializer
+        )
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         serializer = AccountingEntryCreateSerializer(data=request.data)
@@ -111,13 +121,17 @@ class AccountingEntryListCreateView(generics.ListCreateAPIView):
 
         resolved_lines = []
         for line in data["lines"]:
-            account = get_object_or_404(Account, pk=line["account_id"], cooperative_id=cooperative_id)
-            resolved_lines.append({
-                "account": account,
-                "label": line.get("label", ""),
-                "debit": line.get("debit", Decimal("0")),
-                "credit": line.get("credit", Decimal("0")),
-            })
+            account = get_object_or_404(
+                Account, pk=line["account_id"], cooperative_id=cooperative_id
+            )
+            resolved_lines.append(
+                {
+                    "account": account,
+                    "label": line.get("label", ""),
+                    "debit": line.get("debit", Decimal("0")),
+                    "credit": line.get("credit", Decimal("0")),
+                }
+            )
 
         try:
             entry = services.create_accounting_entry(
@@ -136,12 +150,15 @@ class AccountingEntryListCreateView(generics.ListCreateAPIView):
 
 class AccountingEntryDetailView(generics.RetrieveAPIView):
     serializer_class = AccountingEntrySerializer
-    permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("accounting.view")]
+    permission_classes = [
+        IsAuthenticated,
+        IsCooperativeMember,
+        RequirePermission("accounting.view"),
+    ]
 
     def get_queryset(self):  # noqa: ANN201
         return (
-            AccountingEntry.objects
-            .select_related("journal")
+            AccountingEntry.objects.select_related("journal")
             .prefetch_related("lines__account")
             .all()
         )
@@ -150,7 +167,11 @@ class AccountingEntryDetailView(generics.RetrieveAPIView):
 class AccountingEntryPostView(APIView):
     """POST : valide (comptabilise) une écriture en brouillon."""
 
-    permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("accounting.post")]
+    permission_classes = [
+        IsAuthenticated,
+        IsCooperativeMember,
+        RequirePermission("accounting.post"),
+    ]
 
     def post(self, request: Request, entry_id: str) -> Response:
         entry = get_object_or_404(
@@ -168,6 +189,7 @@ class AccountingEntryPostView(APIView):
 
 # ---- Grand livre ----
 
+
 class GeneralLedgerView(APIView):
     """
     GET /api/v1/accounting/ledger/?account_id=<uuid>&date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
@@ -175,7 +197,11 @@ class GeneralLedgerView(APIView):
     Retourne les mouvements d'un compte avec solde progressif.
     """
 
-    permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("accounting.view")]
+    permission_classes = [
+        IsAuthenticated,
+        IsCooperativeMember,
+        RequirePermission("accounting.view"),
+    ]
 
     def get(self, request: Request) -> Response:
         account_id = request.query_params.get("account_id")
@@ -185,34 +211,44 @@ class GeneralLedgerView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        account = get_object_or_404(Account, pk=account_id, cooperative_id=request.user.cooperative_id)
+        account = get_object_or_404(
+            Account, pk=account_id, cooperative_id=request.user.cooperative_id
+        )
 
         date_from_str = request.query_params.get("date_from")
         date_to_str = request.query_params.get("date_to")
 
         from datetime import date as dt_date
+
         date_from = None
         date_to = None
         if date_from_str:
             try:
                 date_from = dt_date.fromisoformat(date_from_str)
             except ValueError:
-                return Response({"error": {"message": "Format date_from invalide (YYYY-MM-DD)."}}, status=400)
+                return Response(
+                    {"error": {"message": "Format date_from invalide (YYYY-MM-DD)."}}, status=400
+                )
         if date_to_str:
             try:
                 date_to = dt_date.fromisoformat(date_to_str)
             except ValueError:
-                return Response({"error": {"message": "Format date_to invalide (YYYY-MM-DD)."}}, status=400)
+                return Response(
+                    {"error": {"message": "Format date_to invalide (YYYY-MM-DD)."}}, status=400
+                )
 
         rows = services.get_general_ledger(account=account, date_from=date_from, date_to=date_to)
 
-        return Response({
-            "account": AccountSerializer(account).data,
-            "rows": GeneralLedgerRowSerializer(rows, many=True).data,
-        })
+        return Response(
+            {
+                "account": AccountSerializer(account).data,
+                "rows": GeneralLedgerRowSerializer(rows, many=True).data,
+            }
+        )
 
 
 # ---- Balance des comptes ----
+
 
 class TrialBalanceView(APIView):
     """
@@ -221,7 +257,11 @@ class TrialBalanceView(APIView):
     Retourne la balance des comptes (une ligne par compte avec mouvements).
     """
 
-    permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("accounting.view")]
+    permission_classes = [
+        IsAuthenticated,
+        IsCooperativeMember,
+        RequirePermission("accounting.view"),
+    ]
 
     def get(self, request: Request) -> Response:
         period = request.query_params.get("period") or None
@@ -233,15 +273,18 @@ class TrialBalanceView(APIView):
         total_debit = sum((r["debit_total"] for r in rows), Decimal("0"))
         total_credit = sum((r["credit_total"] for r in rows), Decimal("0"))
 
-        return Response({
-            "period": period,
-            "rows": TrialBalanceRowSerializer(rows, many=True).data,
-            "total_debit": str(total_debit),
-            "total_credit": str(total_credit),
-        })
+        return Response(
+            {
+                "period": period,
+                "rows": TrialBalanceRowSerializer(rows, many=True).data,
+                "total_debit": str(total_debit),
+                "total_credit": str(total_credit),
+            }
+        )
 
 
 # ---- Tableau de bord comptable ----
+
 
 class AccountingDashboardView(APIView):
     """
@@ -250,7 +293,11 @@ class AccountingDashboardView(APIView):
     Retourne les KPIs du tableau de bord comptable et les écritures récentes.
     """
 
-    permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("accounting.view")]
+    permission_classes = [
+        IsAuthenticated,
+        IsCooperativeMember,
+        RequirePermission("accounting.view"),
+    ]
 
     def get(self, request: Request) -> Response:
         kpis = services.get_accounting_dashboard_kpis(cooperative=request.user.cooperative)
@@ -259,6 +306,7 @@ class AccountingDashboardView(APIView):
 
 # ---- États financiers (CPC & Bilan) ----
 
+
 class FinancialStatementsView(APIView):
     """
     GET /api/v1/accounting/financial-statements/?period=YYYY-MM
@@ -266,7 +314,11 @@ class FinancialStatementsView(APIView):
     Retourne le Compte de Produits et Charges (CPC) et le Bilan.
     """
 
-    permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("accounting.view")]
+    permission_classes = [
+        IsAuthenticated,
+        IsCooperativeMember,
+        RequirePermission("accounting.view"),
+    ]
 
     def get(self, request: Request) -> Response:
         period = request.query_params.get("period") or None
@@ -275,4 +327,3 @@ class FinancialStatementsView(APIView):
             period=period,
         )
         return Response(FinancialStatementsSerializer(statements).data)
-

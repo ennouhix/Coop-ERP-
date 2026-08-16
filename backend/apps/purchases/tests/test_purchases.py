@@ -3,6 +3,7 @@ Tests du module purchases — couvre le cycle complet DRAFT -> CONFIRMED ->
 (PARTIALLY_)RECEIVED, et vérifie que la réception déclenche bien de vrais
 mouvements de stock (intégration avec l'Epic 8).
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -18,7 +19,6 @@ from apps.catalog.models import Product, Unit
 from apps.cooperatives.models import Cooperative
 from apps.inventory.models import StockLevel, StockMovement
 from apps.partners.models import Partner
-from apps.purchases.models import PurchaseOrder
 from apps.warehouses.models import Warehouse
 
 User = get_user_model()
@@ -30,32 +30,54 @@ class PurchaseOrderTestCase(APITestCase):
         self.cooperative = Cooperative.objects.create(name="Coopérative Argane", slug="argane")
 
         self.admin = User.objects.create_user(
-            username="admin", email="admin@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="admin",
+            username="admin",
+            email="admin@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="admin",
         )
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
         self.accountant = User.objects.create_user(
-            username="acct", email="acct@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="accountant",
+            username="acct",
+            email="acct@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="accountant",
         )
 
-        self.unit = Unit.objects.create(cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight")
+        self.unit = Unit.objects.create(
+            cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight"
+        )
         self.product = Product.objects.create(
-            cooperative=self.cooperative, sku="PRD-00001", name={"fr": "Amandes brutes"}, unit=self.unit,
+            cooperative=self.cooperative,
+            sku="PRD-00001",
+            name={"fr": "Amandes brutes"},
+            unit=self.unit,
         )
         self.warehouse = Warehouse.objects.create(
             cooperative=self.cooperative, code="WH-0001", name="Entrepôt Principal", is_default=True
         )
         self.supplier = Partner.objects.create(
-            cooperative=self.cooperative, code="PART-0001", name="Fournisseur Amandes",
-            is_customer=False, is_supplier=True, phone_number="0612345678",
+            cooperative=self.cooperative,
+            code="PART-0001",
+            name="Fournisseur Amandes",
+            is_customer=False,
+            is_supplier=True,
+            phone_number="0612345678",
         )
         self.non_supplier = Partner.objects.create(
-            cooperative=self.cooperative, code="PART-0002", name="Client Seulement",
-            is_customer=True, is_supplier=False, phone_number="0611111111",
+            cooperative=self.cooperative,
+            code="PART-0002",
+            name="Client Seulement",
+            is_customer=True,
+            is_supplier=False,
+            phone_number="0611111111",
         )
 
         self.list_url = reverse("purchases:order-list-create")
@@ -70,7 +92,11 @@ class PurchaseOrderTestCase(APITestCase):
             "warehouse_id": str(self.warehouse.id),
             "order_date": "2026-07-01",
             "lines": [
-                {"product_id": str(self.product.id), "quantity_ordered": "100", "unit_price": "12.50"},
+                {
+                    "product_id": str(self.product.id),
+                    "quantity_ordered": "100",
+                    "unit_price": "12.50",
+                },
             ],
         }
 
@@ -129,7 +155,9 @@ class PurchaseOrderTestCase(APITestCase):
         line_id = order_data["lines"][0]["id"]
         self._auth(self.staff)  # la réception est une tâche de terrain (STAFF autorisé)
         receive_url = reverse("purchases:order-receive", args=[order_data["id"]])
-        response = self.client.post(receive_url, {"receipts": [{"line_id": line_id, "quantity": "100"}]}, format="json")
+        response = self.client.post(
+            receive_url, {"receipts": [{"line_id": line_id, "quantity": "100"}]}, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], "received")
@@ -148,7 +176,9 @@ class PurchaseOrderTestCase(APITestCase):
 
         line_id = order_data["lines"][0]["id"]
         receive_url = reverse("purchases:order-receive", args=[order_data["id"]])
-        response = self.client.post(receive_url, {"receipts": [{"line_id": line_id, "quantity": "60"}]}, format="json")
+        response = self.client.post(
+            receive_url, {"receipts": [{"line_id": line_id, "quantity": "60"}]}, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], "partially_received")
@@ -163,8 +193,12 @@ class PurchaseOrderTestCase(APITestCase):
         line_id = order_data["lines"][0]["id"]
         receive_url = reverse("purchases:order-receive", args=[order_data["id"]])
 
-        self.client.post(receive_url, {"receipts": [{"line_id": line_id, "quantity": "60"}]}, format="json")
-        response = self.client.post(receive_url, {"receipts": [{"line_id": line_id, "quantity": "40"}]}, format="json")
+        self.client.post(
+            receive_url, {"receipts": [{"line_id": line_id, "quantity": "60"}]}, format="json"
+        )
+        response = self.client.post(
+            receive_url, {"receipts": [{"line_id": line_id, "quantity": "40"}]}, format="json"
+        )
 
         self.assertEqual(response.data["status"], "received")
         level = StockLevel.objects.get(product=self.product, warehouse=self.warehouse)
@@ -177,10 +211,14 @@ class PurchaseOrderTestCase(APITestCase):
         line_id = order_data["lines"][0]["id"]
 
         receive_url = reverse("purchases:order-receive", args=[order_data["id"]])
-        response = self.client.post(receive_url, {"receipts": [{"line_id": line_id, "quantity": "150"}]}, format="json")
+        response = self.client.post(
+            receive_url, {"receipts": [{"line_id": line_id, "quantity": "150"}]}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        level_exists = StockLevel.objects.filter(product=self.product, warehouse=self.warehouse).exists()
+        level_exists = StockLevel.objects.filter(
+            product=self.product, warehouse=self.warehouse
+        ).exists()
         self.assertFalse(level_exists)  # rien n'a dû être créé
 
     def test_cannot_receive_draft_order(self) -> None:
@@ -189,7 +227,9 @@ class PurchaseOrderTestCase(APITestCase):
         line_id = order_data["lines"][0]["id"]
 
         receive_url = reverse("purchases:order-receive", args=[order_data["id"]])
-        response = self.client.post(receive_url, {"receipts": [{"line_id": line_id, "quantity": "10"}]}, format="json")
+        response = self.client.post(
+            receive_url, {"receipts": [{"line_id": line_id, "quantity": "10"}]}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_accountant_cannot_receive_order(self) -> None:
@@ -200,7 +240,9 @@ class PurchaseOrderTestCase(APITestCase):
 
         self._auth(self.accountant)
         receive_url = reverse("purchases:order-receive", args=[order_data["id"]])
-        response = self.client.post(receive_url, {"receipts": [{"line_id": line_id, "quantity": "10"}]}, format="json")
+        response = self.client.post(
+            receive_url, {"receipts": [{"line_id": line_id, "quantity": "10"}]}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     # --- Annulation ---
@@ -219,7 +261,9 @@ class PurchaseOrderTestCase(APITestCase):
         self.client.post(reverse("purchases:order-confirm", args=[order_data["id"]]))
         line_id = order_data["lines"][0]["id"]
         receive_url = reverse("purchases:order-receive", args=[order_data["id"]])
-        self.client.post(receive_url, {"receipts": [{"line_id": line_id, "quantity": "10"}]}, format="json")
+        self.client.post(
+            receive_url, {"receipts": [{"line_id": line_id, "quantity": "10"}]}, format="json"
+        )
 
         cancel_url = reverse("purchases:order-cancel", args=[order_data["id"]])
         response = self.client.post(cancel_url)

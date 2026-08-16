@@ -8,6 +8,7 @@ Endpoint :
 Aucune route de modification/suppression : l'immuabilité du journal est
 garantie par l'absence même de la route, comme pour StockMovement (Epic 8).
 """
+
 from __future__ import annotations
 
 from django_filters.rest_framework import DjangoFilterBackend

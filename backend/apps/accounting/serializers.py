@@ -10,6 +10,7 @@ Hiérarchie :
 - GeneralLedgerRowSerializer : grand livre (agrégation par compte)
 - TrialBalanceRowSerializer  : balance des comptes
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -26,9 +27,15 @@ class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = [
-            "id", "code", "name", "name_display",
-            "account_type", "parent", "is_system",
-            "created_at", "updated_at",
+            "id",
+            "code",
+            "name",
+            "name_display",
+            "account_type",
+            "parent",
+            "is_system",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "is_system", "created_at", "updated_at"]
 
@@ -62,8 +69,13 @@ class AccountingEntryLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = AccountingEntryLine
         fields = [
-            "id", "account", "account_code", "account_name",
-            "label", "debit", "credit",
+            "id",
+            "account",
+            "account_code",
+            "account_name",
+            "label",
+            "debit",
+            "credit",
         ]
         read_only_fields = fields
 
@@ -81,29 +93,52 @@ class AccountingEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = AccountingEntry
         fields = [
-            "id", "journal", "journal_code",
-            "entry_number", "entry_date", "period", "description",
-            "is_posted", "lines",
-            "total_debit", "total_credit", "is_balanced",
-            "created_at", "updated_at",
+            "id",
+            "journal",
+            "journal_code",
+            "entry_number",
+            "entry_date",
+            "period",
+            "description",
+            "is_posted",
+            "lines",
+            "total_debit",
+            "total_credit",
+            "is_balanced",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = [
-            "id", "journal_code", "entry_number", "period",
-            "is_posted", "total_debit", "total_credit", "is_balanced",
-            "created_at", "updated_at",
+            "id",
+            "journal_code",
+            "entry_number",
+            "period",
+            "is_posted",
+            "total_debit",
+            "total_credit",
+            "is_balanced",
+            "created_at",
+            "updated_at",
         ]
 
 
 # ---- Input serializers ----
 
+
 class AccountingEntryLineInputSerializer(serializers.Serializer):
     account_id = serializers.UUIDField()
     label = serializers.CharField(required=False, allow_blank=True, default="")
     debit = serializers.DecimalField(
-        max_digits=14, decimal_places=2, min_value=Decimal("0"), default=Decimal("0"),
+        max_digits=14,
+        decimal_places=2,
+        min_value=Decimal("0"),
+        default=Decimal("0"),
     )
     credit = serializers.DecimalField(
-        max_digits=14, decimal_places=2, min_value=Decimal("0"), default=Decimal("0"),
+        max_digits=14,
+        decimal_places=2,
+        min_value=Decimal("0"),
+        default=Decimal("0"),
     )
 
     def validate(self, data: dict) -> dict:
@@ -122,13 +157,12 @@ class AccountingEntryCreateSerializer(serializers.Serializer):
 
     def validate_lines(self, value: list) -> list:
         if len(value) < 2:
-            raise serializers.ValidationError(
-                "Une écriture doit contenir au moins deux lignes."
-            )
+            raise serializers.ValidationError("Une écriture doit contenir au moins deux lignes.")
         return value
 
 
 # ---- Read-only report serializers ----
+
 
 class GeneralLedgerRowSerializer(serializers.Serializer):
     entry_number = serializers.CharField()
@@ -189,4 +223,3 @@ class FinancialStatementsSerializer(serializers.Serializer):
     period = serializers.CharField(allow_null=True)
     cpc = CPCSerializer()
     bilan = BilanSerializer()
-

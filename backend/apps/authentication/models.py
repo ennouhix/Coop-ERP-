@@ -8,6 +8,7 @@ démarrer l'authentification et le filtrage de base dès l'Epic 1, sans
 bloquer les autres modules qui ont besoin de savoir "qui peut faire quoi"
 en attendant l'Epic 3.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -37,7 +38,7 @@ class User(AbstractUser):
         "cooperatives.Cooperative",
         on_delete=models.CASCADE,
         related_name="users",
-        null=True,   # null uniquement pour un superadmin plateforme (équipe support interne)
+        null=True,  # null uniquement pour un superadmin plateforme (équipe support interne)
         blank=True,
     )
     role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.STAFF)

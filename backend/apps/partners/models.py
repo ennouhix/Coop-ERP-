@@ -7,13 +7,14 @@ et les attributs (identité, contact, conditions de paiement) sont
 identiques dans les deux cas. Dupliquer en deux modèles aurait signifié
 dupliquer aussi toute la logique de code séquentiel, validation ICE, etc.
 """
+
 from __future__ import annotations
 
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from apps.core.models import TenantBaseModel
 from apps.cooperatives.validators import ice_validator, phone_validator
+from apps.core.models import TenantBaseModel
 
 
 class PartnerKind(models.TextChoices):
@@ -34,7 +35,9 @@ class Partner(TenantBaseModel):
     is_customer = models.BooleanField(default=False)
     is_supplier = models.BooleanField(default=False)
 
-    partner_kind = models.CharField(max_length=15, choices=PartnerKind.choices, default=PartnerKind.INDIVIDUAL)
+    partner_kind = models.CharField(
+        max_length=15, choices=PartnerKind.choices, default=PartnerKind.INDIVIDUAL
+    )
     name = models.CharField(max_length=255)
     ice = models.CharField("ICE", max_length=15, blank=True, validators=[ice_validator])
 
@@ -47,11 +50,15 @@ class Partner(TenantBaseModel):
         default=0, help_text="Délai de paiement en jours (0 = comptant)."
     )
     credit_limit = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
+        max_digits=12,
+        decimal_places=2,
+        default=0,
         help_text="Encours maximum autorisé pour ce client (0 = pas de limite définie).",
     )
 
-    status = models.CharField(max_length=10, choices=PartnerStatus.choices, default=PartnerStatus.ACTIVE)
+    status = models.CharField(
+        max_length=10, choices=PartnerStatus.choices, default=PartnerStatus.ACTIVE
+    )
     notes = models.TextField(blank=True)
 
     class Meta:
@@ -59,7 +66,9 @@ class Partner(TenantBaseModel):
         verbose_name_plural = "Partenaires"
         ordering = ["name"]
         constraints = [
-            models.UniqueConstraint(fields=["cooperative", "code"], name="unique_partner_code_per_cooperative"),
+            models.UniqueConstraint(
+                fields=["cooperative", "code"], name="unique_partner_code_per_cooperative"
+            ),
             models.UniqueConstraint(
                 fields=["cooperative", "ice"],
                 condition=~models.Q(ice=""),

@@ -5,11 +5,11 @@ Le garde-fou "dernier OWNER" est centralisé ici pour être appliqué de
 façon identique partout où un rôle/statut peut changer (édition de rôle,
 désactivation) — jamais dupliqué dans les vues.
 """
+
 from __future__ import annotations
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
 
@@ -57,7 +57,9 @@ def change_user_role(*, actor, target_user, new_role: str) -> None:  # noqa: ANN
     if actor.role != UserRole.OWNER and (
         target_user.role == UserRole.OWNER or new_role == UserRole.OWNER
     ):
-        raise TeamManagementError("Seul un propriétaire peut attribuer ou modifier le rôle propriétaire.")
+        raise TeamManagementError(
+            "Seul un propriétaire peut attribuer ou modifier le rôle propriétaire."
+        )
 
     if new_role != UserRole.OWNER:
         _assert_not_last_owner(target_user)
@@ -67,8 +69,12 @@ def change_user_role(*, actor, target_user, new_role: str) -> None:  # noqa: ANN
     target_user.save(update_fields=["role"])
 
     log_activity(
-        cooperative=target_user.cooperative, actor=actor, action="user.role_changed",
-        target_type="User", target_id=target_user.id, target_repr=target_user.email,
+        cooperative=target_user.cooperative,
+        actor=actor,
+        action="user.role_changed",
+        target_type="User",
+        target_id=target_user.id,
+        target_repr=target_user.email,
         metadata={"old_role": old_role, "new_role": new_role},
     )
 
@@ -85,8 +91,12 @@ def deactivate_user(*, actor, target_user) -> None:  # noqa: ANN001
     target_user.save(update_fields=["is_active"])
 
     log_activity(
-        cooperative=target_user.cooperative, actor=actor, action="user.deactivated",
-        target_type="User", target_id=target_user.id, target_repr=target_user.email,
+        cooperative=target_user.cooperative,
+        actor=actor,
+        action="user.deactivated",
+        target_type="User",
+        target_id=target_user.id,
+        target_repr=target_user.email,
     )
 
 
@@ -116,8 +126,12 @@ def create_invitation(*, actor, cooperative, email: str, role: str) -> Invitatio
     _send_invitation_email(invitation)
 
     log_activity(
-        cooperative=cooperative, actor=actor, action="user.invited",
-        target_type="Invitation", target_id=invitation.id, target_repr=invitation.email,
+        cooperative=cooperative,
+        actor=actor,
+        action="user.invited",
+        target_type="Invitation",
+        target_id=invitation.id,
+        target_repr=invitation.email,
         metadata={"role": role},
     )
 
@@ -125,8 +139,11 @@ def create_invitation(*, actor, cooperative, email: str, role: str) -> Invitatio
 
 
 def _send_invitation_email(invitation: Invitation) -> None:
+    from apps.cooperatives.services import send_cooperative_email
+
     link = f"{settings.FRONTEND_URL}/accept-invitation?token={invitation.token}"
-    send_mail(
+    send_cooperative_email(
+        cooperative=invitation.cooperative,
         subject=f"Invitation à rejoindre {invitation.cooperative.name} — Coop ERP",
         message=(
             f"Vous avez été invité(e) à rejoindre {invitation.cooperative.name} "
@@ -134,14 +151,12 @@ def _send_invitation_email(invitation: Invitation) -> None:
             f"Cliquez sur ce lien pour créer votre compte (valable 7 jours) :\n{link}\n\n"
             "Si vous ne connaissez pas l'origine de cette invitation, ignorez cet email."
         ),
-        from_email=None,
         recipient_list=[invitation.email],
-        fail_silently=False,
     )
 
 
 @transaction.atomic
-def accept_invitation(*, token: str, password: str, first_name: str, last_name: str) -> "User":
+def accept_invitation(*, token: str, password: str, first_name: str, last_name: str) -> User:
     invitation = Invitation.objects.filter(token=token, status=InvitationStatus.PENDING).first()
     if invitation is None:
         raise InvalidInvitationError("Invitation invalide ou déjà utilisée.")

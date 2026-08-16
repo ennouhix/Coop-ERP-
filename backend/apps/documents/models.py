@@ -8,6 +8,7 @@ Modèles du module documents (M16).
   re-téléchargement même si la source évolue. Immuable en pratique : une
   seule archive par (coopérative, type, document source), régénérée au besoin.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -48,7 +49,9 @@ class DocumentTemplate(TenantBaseModel):
         blank=True, help_text="Conditions générales / remarques affichées sous le document."
     )
     accent_color = models.CharField(
-        max_length=7, blank=True, validators=[accent_color_validator],
+        max_length=7,
+        blank=True,
+        validators=[accent_color_validator],
         help_text="Couleur d'accent du document (#RRGGBB). Vide = couleur par défaut.",
     )
     show_logo = models.BooleanField(

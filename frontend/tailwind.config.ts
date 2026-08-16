@@ -104,6 +104,45 @@ export default {
       letterSpacing: {
         eyebrow: "0.18em",
       },
+      keyframes: {
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(24px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-14px)" },
+        },
+        "float-rotate": {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "50%": { transform: "translateY(-20px) rotate(6deg)" },
+        },
+        grow: {
+          "0%": { transform: "scaleY(0.1)" },
+          "100%": { transform: "scaleY(1)" },
+        },
+        "pulse-dot": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.35" },
+        },
+        "gradient-x": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
+      },
+      animation: {
+        "fade-up": "fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both",
+        float: "float 6s ease-in-out infinite",
+        "float-rotate": "float-rotate 9s ease-in-out infinite",
+        grow: "grow 1s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "pulse-dot": "pulse-dot 1.8s ease-in-out infinite",
+        "gradient-x": "gradient-x 6s ease-in-out infinite",
+        "spin-slow": "spin-slow 26s linear infinite",
+      },
     },
   },
   plugins: [],

@@ -6,11 +6,12 @@ paiement ne dépasse pas le solde dû — même précaution de concurrence que
 pour le stock (Epic 8) : deux paiements simultanés sur la même facture ne
 doivent jamais pouvoir la faire passer en solde négatif.
 """
+
 from __future__ import annotations
 
+import logging
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Optional
 
 from django.db import transaction
 
@@ -19,6 +20,8 @@ from apps.billing.models import Invoice, InvoiceLine, InvoiceStatus, Payment
 from apps.cooperatives.models import Cooperative
 from apps.partners.models import Partner
 from apps.sales.models import SalesOrder, SalesOrderStatus
+
+logger = logging.getLogger(__name__)
 
 INVOICE_NUMBER_PADDING = 5
 
@@ -57,8 +60,14 @@ def _default_due_date(customer: Partner, issue_date: date) -> date:
 
 @transaction.atomic
 def create_manual_invoice(
-    *, cooperative: Cooperative, customer: Partner, lines: list, actor,  # noqa: ANN001
-    issue_date: date, due_date: Optional[date] = None, notes: str = "",
+    *,
+    cooperative: Cooperative,
+    customer: Partner,
+    lines: list,
+    actor,  # noqa: ANN001
+    issue_date: date,
+    due_date: date | None = None,
+    notes: str = "",
 ) -> Invoice:
     if not customer.is_customer:
         raise InvoiceError("Ce partenaire n'est pas enregistré comme client.")
@@ -68,17 +77,24 @@ def create_manual_invoice(
     invoice = Invoice.objects.create(
         cooperative=cooperative,
         invoice_number=_generate_invoice_number(cooperative),
-        customer=customer, sales_order=None,
+        customer=customer,
+        sales_order=None,
         status=InvoiceStatus.DRAFT,
-        issue_date=issue_date, due_date=due_date or _default_due_date(customer, issue_date),
-        notes=notes, created_by=actor,
+        issue_date=issue_date,
+        due_date=due_date or _default_due_date(customer, issue_date),
+        notes=notes,
+        created_by=actor,
     )
 
     for line in lines:
         InvoiceLine.objects.create(
-            cooperative=cooperative, invoice=invoice,
-            product=line["product"], description=line.get("description", ""),
-            quantity=line["quantity"], unit_price=line["unit_price"], created_by=actor,
+            cooperative=cooperative,
+            invoice=invoice,
+            product=line["product"],
+            description=line.get("description", ""),
+            quantity=line["quantity"],
+            unit_price=line["unit_price"],
+            created_by=actor,
         )
 
     return invoice
@@ -86,12 +102,18 @@ def create_manual_invoice(
 
 @transaction.atomic
 def generate_invoice_from_sales_order(
-    *, order: SalesOrder, actor, issue_date: date, due_date: Optional[date] = None,  # noqa: ANN001
+    *,
+    order: SalesOrder,
+    actor,
+    issue_date: date,
+    due_date: date | None = None,  # noqa: ANN001
 ) -> Invoice:
     if order.status not in {SalesOrderStatus.PARTIALLY_DELIVERED, SalesOrderStatus.DELIVERED}:
         raise InvoiceError("Seule une commande au moins partiellement livrée peut être facturée.")
     if order.invoices.exclude(status=InvoiceStatus.CANCELLED).exists():
-        raise InvoiceError("Cette commande a déjà une facture active. Annulez-la avant d'en régénérer une.")
+        raise InvoiceError(
+            "Cette commande a déjà une facture active. Annulez-la avant d'en régénérer une."
+        )
 
     delivered_lines = [line for line in order.lines.all() if line.quantity_delivered > 0]
     if not delivered_lines:
@@ -100,16 +122,21 @@ def generate_invoice_from_sales_order(
     invoice = Invoice.objects.create(
         cooperative=order.cooperative,
         invoice_number=_generate_invoice_number(order.cooperative),
-        customer=order.customer, sales_order=order,
+        customer=order.customer,
+        sales_order=order,
         status=InvoiceStatus.DRAFT,
-        issue_date=issue_date, due_date=due_date or _default_due_date(order.customer, issue_date),
+        issue_date=issue_date,
+        due_date=due_date or _default_due_date(order.customer, issue_date),
         created_by=actor,
     )
 
     for line in delivered_lines:
         InvoiceLine.objects.create(
-            cooperative=order.cooperative, invoice=invoice,
-            product=line.product, quantity=line.quantity_delivered, unit_price=line.unit_price,
+            cooperative=order.cooperative,
+            invoice=invoice,
+            product=line.product,
+            quantity=line.quantity_delivered,
+            unit_price=line.unit_price,
             created_by=actor,
         )
 
@@ -126,7 +153,9 @@ def _create_accounting_entry_for_invoice(invoice: Invoice, actor) -> None:
     if not sales_journal:
         return
 
-    client_account = Account.objects.filter(cooperative=coop, code__in=["3421", "342", "34"]).first()
+    client_account = Account.objects.filter(
+        cooperative=coop, code__in=["3421", "342", "34"]
+    ).first()
     revenue_account = Account.objects.filter(cooperative=coop, code__in=["701", "70", "7"]).first()
 
     if not client_account or not revenue_account:
@@ -139,8 +168,18 @@ def _create_accounting_entry_for_invoice(invoice: Invoice, actor) -> None:
             entry_date=invoice.issue_date,
             description=f"Facture {invoice.invoice_number} — Client {invoice.customer.name}",
             lines_data=[
-                {"account": client_account, "label": f"Client {invoice.customer.name}", "debit": invoice.total_amount, "credit": Decimal("0")},
-                {"account": revenue_account, "label": f"Vente {invoice.invoice_number}", "debit": Decimal("0"), "credit": invoice.total_amount},
+                {
+                    "account": client_account,
+                    "label": f"Client {invoice.customer.name}",
+                    "debit": invoice.total_amount,
+                    "credit": Decimal("0"),
+                },
+                {
+                    "account": revenue_account,
+                    "label": f"Vente {invoice.invoice_number}",
+                    "debit": Decimal("0"),
+                    "credit": invoice.total_amount,
+                },
             ],
             actor=actor,
         )
@@ -162,8 +201,12 @@ def _create_accounting_entry_for_payment(payment: Payment, actor) -> None:
         return
 
     treasury_code = "5161" if payment.payment_method == "cash" else "5141"
-    treasury_account = Account.objects.filter(cooperative=coop, code__startswith=treasury_code[:3]).first()
-    client_account = Account.objects.filter(cooperative=coop, code__in=["3421", "342", "34"]).first()
+    treasury_account = Account.objects.filter(
+        cooperative=coop, code__startswith=treasury_code[:3]
+    ).first()
+    client_account = Account.objects.filter(
+        cooperative=coop, code__in=["3421", "342", "34"]
+    ).first()
 
     if not treasury_account or not client_account:
         return
@@ -173,10 +216,23 @@ def _create_accounting_entry_for_payment(payment: Payment, actor) -> None:
             cooperative=coop,
             journal=journal,
             entry_date=payment.payment_date,
-            description=f"Règlement Facture {payment.invoice.invoice_number} — {payment.payment_method}",
+            description=(
+                f"Règlement Facture {payment.invoice.invoice_number}"
+                f" — {payment.payment_method}"
+            ),
             lines_data=[
-                {"account": treasury_account, "label": f"Encaissement {payment.invoice.invoice_number}", "debit": payment.amount, "credit": Decimal("0")},
-                {"account": client_account, "label": f"Règlement Client {payment.invoice.customer.name}", "debit": Decimal("0"), "credit": payment.amount},
+                {
+                    "account": treasury_account,
+                    "label": f"Encaissement {payment.invoice.invoice_number}",
+                    "debit": payment.amount,
+                    "credit": Decimal("0"),
+                },
+                {
+                    "account": client_account,
+                    "label": f"Règlement Client {payment.invoice.customer.name}",
+                    "debit": Decimal("0"),
+                    "credit": payment.amount,
+                },
             ],
             actor=actor,
         )
@@ -197,11 +253,22 @@ def issue_invoice(*, invoice: Invoice, actor) -> Invoice:  # noqa: ANN001
     invoice.save(update_fields=["status", "updated_by"])
 
     log_activity(
-        cooperative=invoice.cooperative, actor=actor, action="invoice.issued",
-        target_type="Invoice", target_id=invoice.id, target_repr=invoice.invoice_number,
+        cooperative=invoice.cooperative,
+        actor=actor,
+        action="invoice.issued",
+        target_type="Invoice",
+        target_id=invoice.id,
+        target_repr=invoice.invoice_number,
         metadata={"total_amount": str(invoice.total_amount)},
     )
     _create_accounting_entry_for_invoice(invoice, actor)
+
+    try:
+        from apps.cooperatives.notifications import notify_invoice_issued
+        notify_invoice_issued(invoice)
+    except Exception:
+        logger.warning("Erreur notification facture %s", invoice.invoice_number, exc_info=True)
+
     return invoice
 
 
@@ -217,16 +284,26 @@ def cancel_invoice(*, invoice: Invoice, actor) -> Invoice:  # noqa: ANN001
     invoice.save(update_fields=["status", "updated_by"])
 
     log_activity(
-        cooperative=invoice.cooperative, actor=actor, action="invoice.cancelled",
-        target_type="Invoice", target_id=invoice.id, target_repr=invoice.invoice_number,
+        cooperative=invoice.cooperative,
+        actor=actor,
+        action="invoice.cancelled",
+        target_type="Invoice",
+        target_id=invoice.id,
+        target_repr=invoice.invoice_number,
     )
     return invoice
 
 
 @transaction.atomic
 def record_payment(
-    *, invoice: Invoice, amount: Decimal, payment_date: date, actor,  # noqa: ANN001
-    payment_method: str = "cash", reference: str = "", notes: str = "",
+    *,
+    invoice: Invoice,
+    amount: Decimal,
+    payment_date: date,
+    actor,  # noqa: ANN001
+    payment_method: str = "cash",
+    reference: str = "",
+    notes: str = "",
 ) -> Payment:
     # Verrouille la facture pendant tout le calcul du solde pour empêcher
     # deux paiements concurrents de faire passer le solde sous zéro.
@@ -242,9 +319,14 @@ def record_payment(
         )
 
     payment = Payment.objects.create(
-        cooperative=locked_invoice.cooperative, invoice=locked_invoice, amount=amount,
-        payment_date=payment_date, payment_method=payment_method, reference=reference,
-        notes=notes, created_by=actor,
+        cooperative=locked_invoice.cooperative,
+        invoice=locked_invoice,
+        amount=amount,
+        payment_date=payment_date,
+        payment_method=payment_method,
+        reference=reference,
+        notes=notes,
+        created_by=actor,
     )
 
     locked_invoice.refresh_from_db()
@@ -255,11 +337,25 @@ def record_payment(
     locked_invoice.save(update_fields=["status", "updated_by"])
 
     log_activity(
-        cooperative=locked_invoice.cooperative, actor=actor, action="invoice.payment_recorded",
-        target_type="Payment", target_id=payment.id, target_repr=f"{amount} — {locked_invoice.invoice_number}",
-        metadata={"amount": str(amount), "payment_method": payment_method, "new_status": locked_invoice.status},
+        cooperative=locked_invoice.cooperative,
+        actor=actor,
+        action="invoice.payment_recorded",
+        target_type="Payment",
+        target_id=payment.id,
+        target_repr=f"{amount} — {locked_invoice.invoice_number}",
+        metadata={
+            "amount": str(amount),
+            "payment_method": payment_method,
+            "new_status": locked_invoice.status,
+        },
     )
     _create_accounting_entry_for_payment(payment, actor)
 
-    return payment
+    try:
+        from apps.cooperatives.notifications import notify_payment_received
+        is_fully_paid = locked_invoice.balance_due <= 0
+        notify_payment_received(payment, is_fully_paid=is_fully_paid)
+    except Exception:
+        logger.warning("Erreur notification paiement %s", payment.id, exc_info=True)
 
+    return payment

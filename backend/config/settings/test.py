@@ -1,4 +1,5 @@
 """Configuration utilisée par pytest / CI. Base de données rapide, hashing léger."""
+
 from .base import *  # noqa: F401,F403
 
 DEBUG = False

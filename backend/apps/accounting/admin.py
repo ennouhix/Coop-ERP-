@@ -30,8 +30,12 @@ class JournalAdmin(admin.ModelAdmin):
 @admin.register(AccountingEntry)
 class AccountingEntryAdmin(admin.ModelAdmin):
     list_display = [
-        "entry_number", "journal", "entry_date", "period",
-        "is_posted", "cooperative",
+        "entry_number",
+        "journal",
+        "entry_date",
+        "period",
+        "is_posted",
+        "cooperative",
     ]
     list_filter = ["is_posted", "journal", "cooperative"]
     search_fields = ["entry_number", "description"]

@@ -1,6 +1,7 @@
 """
 Tests du module sales.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -28,33 +29,54 @@ class SalesOrderTestCase(APITestCase):
         self.cooperative = Cooperative.objects.create(name="Coopérative Argane", slug="argane")
 
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
         self.accountant = User.objects.create_user(
-            username="acct", email="acct@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="accountant",
+            username="acct",
+            email="acct@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="accountant",
         )
 
-        self.unit = Unit.objects.create(cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight")
+        self.unit = Unit.objects.create(
+            cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight"
+        )
         self.product = Product.objects.create(
-            cooperative=self.cooperative, sku="PRD-00001", name={"fr": "Huile d'argane"}, unit=self.unit,
+            cooperative=self.cooperative,
+            sku="PRD-00001",
+            name={"fr": "Huile d'argane"},
+            unit=self.unit,
         )
         self.warehouse = Warehouse.objects.create(
             cooperative=self.cooperative, code="WH-0001", name="Entrepôt Principal", is_default=True
         )
         self.customer = Partner.objects.create(
-            cooperative=self.cooperative, code="PART-0001", name="Épicerie Al Baraka",
-            is_customer=True, is_supplier=False, phone_number="0612345678",
+            cooperative=self.cooperative,
+            code="PART-0001",
+            name="Épicerie Al Baraka",
+            is_customer=True,
+            is_supplier=False,
+            phone_number="0612345678",
         )
         self.non_customer = Partner.objects.create(
-            cooperative=self.cooperative, code="PART-0002", name="Fournisseur Seulement",
-            is_customer=False, is_supplier=True, phone_number="0611111111",
+            cooperative=self.cooperative,
+            code="PART-0002",
+            name="Fournisseur Seulement",
+            is_customer=False,
+            is_supplier=True,
+            phone_number="0611111111",
         )
 
         # Stock initial disponible pour les scénarios de livraison.
         inventory_services.record_stock_in(
-            product=self.product, warehouse=self.warehouse, quantity=Decimal("100"),
+            product=self.product,
+            warehouse=self.warehouse,
+            quantity=Decimal("100"),
             actor=self.staff,
         )
 
@@ -70,7 +92,11 @@ class SalesOrderTestCase(APITestCase):
             "warehouse_id": str(self.warehouse.id),
             "order_date": "2026-07-01",
             "lines": [
-                {"product_id": str(self.product.id), "quantity_ordered": quantity, "unit_price": "45.00"},
+                {
+                    "product_id": str(self.product.id),
+                    "quantity_ordered": quantity,
+                    "unit_price": "45.00",
+                },
             ],
         }
 
@@ -103,7 +129,9 @@ class SalesOrderTestCase(APITestCase):
 
         line_id = order["lines"][0]["id"]
         deliver_url = reverse("sales:order-deliver", args=[order["id"]])
-        response = self.client.post(deliver_url, {"deliveries": [{"line_id": line_id, "quantity": "30"}]}, format="json")
+        response = self.client.post(
+            deliver_url, {"deliveries": [{"line_id": line_id, "quantity": "30"}]}, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], "delivered")
@@ -127,7 +155,9 @@ class SalesOrderTestCase(APITestCase):
 
         line_id = order["lines"][0]["id"]
         deliver_url = reverse("sales:order-deliver", args=[order["id"]])
-        response = self.client.post(deliver_url, {"deliveries": [{"line_id": line_id, "quantity": "30"}]}, format="json")
+        response = self.client.post(
+            deliver_url, {"deliveries": [{"line_id": line_id, "quantity": "30"}]}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # La commande ne doit pas être passée à "delivered" si la livraison a échoué.
@@ -141,7 +171,9 @@ class SalesOrderTestCase(APITestCase):
 
         line_id = order["lines"][0]["id"]
         deliver_url = reverse("sales:order-deliver", args=[order["id"]])
-        response = self.client.post(deliver_url, {"deliveries": [{"line_id": line_id, "quantity": "10"}]}, format="json")
+        response = self.client.post(
+            deliver_url, {"deliveries": [{"line_id": line_id, "quantity": "10"}]}, format="json"
+        )
         self.assertEqual(response.data["status"], "partially_delivered")
 
     # --- Contrôle d'encours ---
@@ -181,7 +213,8 @@ class SalesOrderTestCase(APITestCase):
         line_id = order["lines"][0]["id"]
         self.client.post(
             reverse("sales:order-deliver", args=[order["id"]]),
-            {"deliveries": [{"line_id": line_id, "quantity": "10"}]}, format="json",
+            {"deliveries": [{"line_id": line_id, "quantity": "10"}]},
+            format="json",
         )
 
         response = self.client.post(reverse("sales:order-cancel", args=[order["id"]]))

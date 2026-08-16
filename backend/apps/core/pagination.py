@@ -1,4 +1,5 @@
 """Pagination standard utilisée par défaut sur tous les endpoints de l'API."""
+
 from __future__ import annotations
 
 from rest_framework.pagination import PageNumberPagination

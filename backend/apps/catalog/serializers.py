@@ -7,6 +7,7 @@ sous deux formes :
 - `name_display` : valeur résolue selon la langue de la requête
   (header Accept-Language), pour l'affichage direct sans logique côté client.
 """
+
 from __future__ import annotations
 
 from rest_framework import serializers
@@ -38,7 +39,9 @@ class CategorySerializer(serializers.ModelSerializer):
     def validate_parent(self, value: Category | None) -> Category | None:
         instance = getattr(self, "instance", None)
         if value is not None and instance is not None and value.pk == instance.pk:
-            raise serializers.ValidationError("Une catégorie ne peut pas être sa propre catégorie parente.")
+            raise serializers.ValidationError(
+                "Une catégorie ne peut pas être sa propre catégorie parente."
+            )
         return value
 
 
@@ -50,11 +53,23 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            "id", "sku", "barcode", "name", "name_display",
-            "category", "category_name_display", "unit", "unit_symbol",
-            "reference_purchase_price", "reference_sale_price", "minimum_stock_threshold",
-            "description", "is_sellable", "is_purchasable",
-            "created_at", "updated_at",
+            "id",
+            "sku",
+            "barcode",
+            "name",
+            "name_display",
+            "category",
+            "category_name_display",
+            "unit",
+            "unit_symbol",
+            "reference_purchase_price",
+            "reference_sale_price",
+            "minimum_stock_threshold",
+            "description",
+            "is_sellable",
+            "is_purchasable",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "sku", "created_at", "updated_at"]
 
@@ -75,9 +90,16 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            "barcode", "name", "category", "unit",
-            "reference_purchase_price", "reference_sale_price", "minimum_stock_threshold",
-            "description", "is_sellable", "is_purchasable",
+            "barcode",
+            "name",
+            "category",
+            "unit",
+            "reference_purchase_price",
+            "reference_sale_price",
+            "minimum_stock_threshold",
+            "description",
+            "is_sellable",
+            "is_purchasable",
         ]
 
     def validate_name(self, value: dict) -> dict:
@@ -91,5 +113,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         cooperative_id = request.user.cooperative_id if request else None
         if Product.objects.filter(cooperative_id=cooperative_id, barcode=value).exists():
-            raise serializers.ValidationError("Un produit avec ce code-barres existe déjà dans votre coopérative.")
+            raise serializers.ValidationError(
+                "Un produit avec ce code-barres existe déjà dans votre coopérative."
+            )
         return value

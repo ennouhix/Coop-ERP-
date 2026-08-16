@@ -4,6 +4,7 @@ Logique métier du module partners.
 Même stratégie de verrouillage que apps.members.services : select_for_update
 sur la coopérative pour garantir l'unicité du code sous forte concurrence.
 """
+
 from __future__ import annotations
 
 from django.db import transaction

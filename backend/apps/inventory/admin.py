@@ -21,10 +21,20 @@ class StockLevelAdmin(admin.ModelAdmin):
 
 @admin.register(StockMovement)
 class StockMovementAdmin(admin.ModelAdmin):
-    list_display = ["movement_type", "reason", "product", "warehouse", "destination_warehouse", "quantity", "created_at"]
+    list_display = [
+        "movement_type",
+        "reason",
+        "product",
+        "warehouse",
+        "destination_warehouse",
+        "quantity",
+        "created_at",
+    ]
     list_filter = ["movement_type", "reason", "cooperative"]
     search_fields = ["product__sku", "reference"]
-    readonly_fields = [f.name for f in StockMovement._meta.fields]  # ledger immuable : jamais éditable
+    readonly_fields = [
+        f.name for f in StockMovement._meta.fields
+    ]  # ledger immuable : jamais éditable
 
     def has_add_permission(self, request) -> bool:  # noqa: ANN001
         return False  # créer un mouvement passe TOUJOURS par apps.inventory.services

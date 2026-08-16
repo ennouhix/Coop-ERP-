@@ -1,4 +1,5 @@
 """Serializers du module sales — même précaution FK que purchases/inventory."""
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -17,9 +18,15 @@ class SalesOrderLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = SalesOrderLine
         fields = [
-            "id", "product", "product_sku", "product_name",
-            "quantity_ordered", "quantity_delivered", "quantity_remaining",
-            "unit_price", "line_total",
+            "id",
+            "product",
+            "product_sku",
+            "product_name",
+            "quantity_ordered",
+            "quantity_delivered",
+            "quantity_remaining",
+            "unit_price",
+            "line_total",
         ]
         read_only_fields = fields
 
@@ -38,16 +45,29 @@ class SalesOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = SalesOrder
         fields = [
-            "id", "order_number", "customer", "customer_name", "warehouse", "warehouse_code",
-            "status", "order_date", "expected_delivery_date", "notes",
-            "lines", "total_amount", "created_at", "updated_at",
+            "id",
+            "order_number",
+            "customer",
+            "customer_name",
+            "warehouse",
+            "warehouse_code",
+            "status",
+            "order_date",
+            "expected_delivery_date",
+            "notes",
+            "lines",
+            "total_amount",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "order_number", "status", "created_at", "updated_at"]
 
 
 class SalesOrderLineInputSerializer(serializers.Serializer):
     product_id = serializers.UUIDField()
-    quantity_ordered = serializers.DecimalField(max_digits=14, decimal_places=3, min_value=Decimal("0.001"))
+    quantity_ordered = serializers.DecimalField(
+        max_digits=14, decimal_places=3, min_value=Decimal("0.001")
+    )
     unit_price = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("0"))
 
 

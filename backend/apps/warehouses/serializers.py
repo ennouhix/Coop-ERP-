@@ -1,4 +1,5 @@
 """Serializers du module warehouses."""
+
 from __future__ import annotations
 
 from rest_framework import serializers
@@ -12,8 +13,16 @@ class WarehouseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Warehouse
         fields = [
-            "id", "code", "name", "address", "city", "phone_number",
-            "manager", "manager_name", "is_default", "created_at",
+            "id",
+            "code",
+            "name",
+            "address",
+            "city",
+            "phone_number",
+            "manager",
+            "manager_name",
+            "is_default",
+            "created_at",
         ]
         read_only_fields = ["id", "code", "is_default", "created_at"]
 
@@ -32,6 +41,10 @@ class WarehouseCreateSerializer(serializers.ModelSerializer):
 
     def validate_manager(self, value):  # noqa: ANN001, ANN201
         request = self.context.get("request")
-        if value is not None and request is not None and value.cooperative_id != request.user.cooperative_id:
+        if (
+            value is not None
+            and request is not None
+            and value.cooperative_id != request.user.cooperative_id
+        ):
             raise serializers.ValidationError("Le responsable doit appartenir à votre coopérative.")
         return value

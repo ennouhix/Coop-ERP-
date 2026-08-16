@@ -1,6 +1,7 @@
 """
 Tests d'inscription self-service d'une coopérative.
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model

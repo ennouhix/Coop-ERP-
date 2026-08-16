@@ -19,7 +19,15 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ["sku", "__str__", "category", "unit", "is_sellable", "is_purchasable", "cooperative"]
+    list_display = [
+        "sku",
+        "__str__",
+        "category",
+        "unit",
+        "is_sellable",
+        "is_purchasable",
+        "cooperative",
+    ]
     list_filter = ["is_sellable", "is_purchasable", "cooperative"]
     search_fields = ["sku", "barcode"]
     readonly_fields = ["sku", "created_at", "updated_at"]

@@ -1,12 +1,13 @@
 """
 Modèle Warehouse — lieux de stockage physiques de la coopérative.
 """
+
 from __future__ import annotations
 
 from django.db import models
 
-from apps.core.models import TenantBaseModel
 from apps.cooperatives.validators import phone_validator
+from apps.core.models import TenantBaseModel
 
 
 class Warehouse(TenantBaseModel):
@@ -19,7 +20,11 @@ class Warehouse(TenantBaseModel):
     phone_number = models.CharField(max_length=20, blank=True, validators=[phone_validator])
 
     manager = models.ForeignKey(
-        "authentication.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="managed_warehouses"
+        "authentication.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="managed_warehouses",
     )
     is_default = models.BooleanField(default=False)
 
@@ -28,7 +33,9 @@ class Warehouse(TenantBaseModel):
         verbose_name_plural = "Entrepôts"
         ordering = ["name"]
         constraints = [
-            models.UniqueConstraint(fields=["cooperative", "code"], name="unique_warehouse_code_per_cooperative"),
+            models.UniqueConstraint(
+                fields=["cooperative", "code"], name="unique_warehouse_code_per_cooperative"
+            ),
         ]
 
     def save(self, *args, **kwargs):
@@ -36,13 +43,14 @@ class Warehouse(TenantBaseModel):
         if not self.code and self.cooperative_id:
             # Évite l'import circulaire
             from apps.warehouses.services import generate_warehouse_code
+
             self.code = generate_warehouse_code(self.cooperative)
-            
+
             # Si c'est le premier entrepôt, le définir comme défaut
             if not Warehouse.all_objects.filter(cooperative=self.cooperative).exists():
                 self.is_default = True
-        
+
         super().save(*args, **kwargs)
 
-    #def __str__(self) -> str:
-     #   return f"{self.code} — {self.name}"     
+    # def __str__(self) -> str:
+    #   return f"{self.code} — {self.name}"

@@ -1,6 +1,7 @@
 """
 Serializers du module authentification.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -79,9 +80,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             return []
         from apps.roles_permissions.services import effective_modules_for_role
 
-        return sorted(
-            effective_modules_for_role(cooperative_id=obj.cooperative_id, role=obj.role)
-        )
+        return sorted(effective_modules_for_role(cooperative_id=obj.cooperative_id, role=obj.role))
 
 
 class ChangePasswordSerializer(serializers.Serializer):

@@ -1,6 +1,7 @@
 """
 Tests du module warehouses.
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
@@ -24,16 +25,25 @@ class WarehouseTestCase(APITestCase):
         self.other_cooperative = Cooperative.objects.create(name="Autre Coop", slug="autre")
 
         self.admin = User.objects.create_user(
-            username="admin", email="admin@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="admin",
+            username="admin",
+            email="admin@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="admin",
         )
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
         self.foreign_user = User.objects.create_user(
-            username="foreign", email="foreign@autre.ma", password="MotDePasseSolide123",
-            cooperative=self.other_cooperative, role="owner",
+            username="foreign",
+            email="foreign@autre.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.other_cooperative,
+            role="owner",
         )
 
         self.list_url = reverse("warehouses:list-create")

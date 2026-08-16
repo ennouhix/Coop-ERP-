@@ -5,6 +5,7 @@ Tests du module documents (M16) : génération et archivage des PDF
 Vérifie le contenu réel des fichiers (PDF valides), l'archivage (une seule
 copie par source, re-téléchargement identique) et l'isolation tenant.
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -32,31 +33,52 @@ class DocumentsTestCase(APITestCase):
     def setUp(self) -> None:
         cache.clear()
         self.cooperative = Cooperative.objects.create(
-            name="Coopérative Argane", slug="argane", ice="001234567000012", legal_name="Argane SARL",
+            name="Coopérative Argane",
+            slug="argane",
+            ice="001234567000012",
+            legal_name="Argane SARL",
         )
         self.admin = User.objects.create_user(
-            username="admin", email="admin@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="admin",
+            username="admin",
+            email="admin@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="admin",
         )
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
 
-        self.unit = Unit.objects.create(cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight")
+        self.unit = Unit.objects.create(
+            cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight"
+        )
         self.product = Product.objects.create(
-            cooperative=self.cooperative, sku="PRD-00001", name={"fr": "Huile d'argane"}, unit=self.unit,
+            cooperative=self.cooperative,
+            sku="PRD-00001",
+            name={"fr": "Huile d'argane"},
+            unit=self.unit,
         )
         self.warehouse = Warehouse.objects.create(
             cooperative=self.cooperative, code="WH-0001", name="Entrepôt", is_default=True
         )
         self.customer = Partner.objects.create(
-            cooperative=self.cooperative, code="PART-0001", name="Épicerie Al Baraka",
-            is_customer=True, is_supplier=False,
+            cooperative=self.cooperative,
+            code="PART-0001",
+            name="Épicerie Al Baraka",
+            is_customer=True,
+            is_supplier=False,
         )
         self.supplier = Partner.objects.create(
-            cooperative=self.cooperative, code="PART-0002", name="Coopérative Souss Fruits",
-            is_customer=False, is_supplier=True, ice="002222222200022",
+            cooperative=self.cooperative,
+            code="PART-0002",
+            name="Coopérative Souss Fruits",
+            is_customer=False,
+            is_supplier=True,
+            ice="002222222200022",
         )
 
     def _auth(self, user) -> None:  # noqa: ANN001
@@ -65,17 +87,37 @@ class DocumentsTestCase(APITestCase):
 
     def _create_sales_order(self):
         return sales_services.create_sales_order(
-            cooperative=self.cooperative, customer=self.customer, warehouse=self.warehouse,
-            lines=[{"product": self.product, "quantity_ordered": Decimal("5"), "unit_price": Decimal("50.00")}],
-            actor=self.admin, order_date=date(2026, 7, 1), notes="Livraison hebdomadaire.",
+            cooperative=self.cooperative,
+            customer=self.customer,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("5"),
+                    "unit_price": Decimal("50.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date=date(2026, 7, 1),
+            notes="Livraison hebdomadaire.",
         )
 
     def _create_purchase_order(self):
         return purchase_services.create_purchase_order(
-            cooperative=self.cooperative, supplier=self.supplier, warehouse=self.warehouse,
-            lines=[{"product": self.product, "quantity_ordered": Decimal("20"), "unit_price": Decimal("30.00")}],
-            actor=self.admin, order_date=date(2026, 7, 2),
-            expected_delivery_date=date(2026, 7, 10), notes="Merci de livrer avant la fin de semaine.",
+            cooperative=self.cooperative,
+            supplier=self.supplier,
+            warehouse=self.warehouse,
+            lines=[
+                {
+                    "product": self.product,
+                    "quantity_ordered": Decimal("20"),
+                    "unit_price": Decimal("30.00"),
+                }
+            ],
+            actor=self.admin,
+            order_date=date(2026, 7, 2),
+            expected_delivery_date=date(2026, 7, 10),
+            notes="Merci de livrer avant la fin de semaine.",
         )
 
     @staticmethod
@@ -97,7 +139,9 @@ class DocumentsTestCase(APITestCase):
         self.assertTrue(content.startswith(b"%PDF"))
         self.assertGreater(len(content), 500)
 
-        archive = DocumentArchive.objects.get(cooperative=self.cooperative, doc_type="delivery_note", source_id=order.id)
+        archive = DocumentArchive.objects.get(
+            cooperative=self.cooperative, doc_type="delivery_note", source_id=order.id
+        )
         self.assertEqual(archive.source_number, order.order_number)
         self.assertTrue(archive.pdf_file.name.endswith(".pdf"))
 
@@ -110,7 +154,9 @@ class DocumentsTestCase(APITestCase):
         second = self._pdf_content(self.client.get(url))
         self.assertEqual(first, second)
         self.assertEqual(
-            DocumentArchive.objects.filter(cooperative=self.cooperative, doc_type="delivery_note", source_id=order.id).count(),
+            DocumentArchive.objects.filter(
+                cooperative=self.cooperative, doc_type="delivery_note", source_id=order.id
+            ).count(),
             1,
         )
 
@@ -140,7 +186,8 @@ class DocumentsTestCase(APITestCase):
         order = self._create_purchase_order()
         purchase_services.confirm_purchase_order(order=order, actor=self.admin)
         purchase_services.record_purchase_receipt(
-            order=order, actor=self.admin,
+            order=order,
+            actor=self.admin,
             receipts=[{"line_id": order.lines.first().id, "quantity": Decimal("20")}],
         )
         self._auth(self.admin)
@@ -157,8 +204,11 @@ class DocumentsTestCase(APITestCase):
     def test_cannot_download_document_from_other_cooperative(self) -> None:
         other_coop = Cooperative.objects.create(name="Autre Coop", slug="autre")
         other_admin = User.objects.create_user(
-            username="other", email="other@autre.ma", password="MotDePasseSolide123",
-            cooperative=other_coop, role="admin",
+            username="other",
+            email="other@autre.ma",
+            password="MotDePasseSolide123",
+            cooperative=other_coop,
+            role="admin",
         )
         order = self._create_purchase_order()
         self._auth(other_admin)
@@ -172,9 +222,12 @@ class DocumentsTestCase(APITestCase):
         from apps.documents.models import DocumentTemplate, DocumentTemplateType
 
         DocumentTemplate.objects.create(
-            cooperative=self.cooperative, template_type=DocumentTemplateType.DELIVERY_NOTE,
-            header_text="Coopérative BIO", footer_text="Paiement à réception",
-            accent_color="#c1440e", show_logo=False,
+            cooperative=self.cooperative,
+            template_type=DocumentTemplateType.DELIVERY_NOTE,
+            header_text="Coopérative BIO",
+            footer_text="Paiement à réception",
+            accent_color="#c1440e",
+            show_logo=False,
         )
         order = self._create_sales_order()
         self._auth(self.admin)
@@ -216,7 +269,9 @@ class DocumentsTestCase(APITestCase):
         from apps.documents.models import DocumentTemplate
 
         self.assertEqual(
-            DocumentTemplate.objects.filter(cooperative=self.cooperative, template_type="delivery_note").count(),
+            DocumentTemplate.objects.filter(
+                cooperative=self.cooperative, template_type="delivery_note"
+            ).count(),
             1,
         )
 

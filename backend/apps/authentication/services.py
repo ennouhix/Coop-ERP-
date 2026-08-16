@@ -10,6 +10,7 @@ Règle de sécurité importante : on ne révèle JAMAIS si un email existe ou
 non dans la base (`request_password_reset` retourne toujours succès côté
 API), pour ne pas permettre l'énumération des comptes existants.
 """
+
 from __future__ import annotations
 
 import logging
@@ -17,7 +18,6 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
@@ -41,7 +41,10 @@ def request_password_reset(email: str) -> None:
     token = token_generator.make_token(user)
     reset_link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
 
-    send_mail(
+    from apps.cooperatives.services import send_cooperative_email
+
+    send_cooperative_email(
+        cooperative=getattr(user, "cooperative", None),
         subject="Réinitialisation de votre mot de passe — Coop ERP",
         message=(
             f"Bonjour {user.first_name or user.email},\n\n"
@@ -49,9 +52,7 @@ def request_password_reset(email: str) -> None:
             f"(valable 1 heure) :\n{reset_link}\n\n"
             "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email."
         ),
-        from_email=None,
         recipient_list=[user.email],
-        fail_silently=False,
     )
 
 

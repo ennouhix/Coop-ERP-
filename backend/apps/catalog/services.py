@@ -2,6 +2,7 @@
 Logique métier du catalogue. Même stratégie de verrouillage que
 apps.members/apps.partners.services pour la génération de code séquentiel.
 """
+
 from __future__ import annotations
 
 from django.db import transaction
@@ -40,5 +41,5 @@ def create_product(*, cooperative: Cooperative, **fields) -> Product:
 
 
 def assert_category_hierarchy_valid(category: Category) -> None:
-    """Point d'entrée explicite pour valider une catégorie avant sauvegarde (voir clean() du modèle)."""
+    """Point d'entrée explicite pour valider une catégorie avant sauvegarde."""
     category.full_clean()

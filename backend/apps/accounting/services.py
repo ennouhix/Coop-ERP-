@@ -10,11 +10,11 @@ Fonctions principales :
 Règle fondamentale : post_entry() lève AccountingError si l'écriture n'est
 pas équilibrée — jamais de comptabilisation sans équilibre.
 """
+
 from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Optional
 
 from django.db import transaction
 from django.db.models import Sum
@@ -38,8 +38,11 @@ class AccountingError(Exception):
 
 # ---- Génération du numéro d'écriture ----
 
+
 @transaction.atomic
-def _generate_entry_number(cooperative: Cooperative, journal: Journal) -> str:
+def _generate_entry_number(
+    cooperative: Cooperative, journal: Journal, entry_date: date | None = None
+) -> str:
     """
     Génère un numéro unique par journal et par année civile.
     Format : "{code journal}-{AAAA}-{NNNNN}" — ex: JV-2024-00001
@@ -47,14 +50,16 @@ def _generate_entry_number(cooperative: Cooperative, journal: Journal) -> str:
     select_for_update() sur la coopérative garantit l'unicité en concurrent.
     """
     from apps.cooperatives.models import Cooperative as Coop  # éviter import circulaire
+
     Coop.objects.select_for_update().get(pk=cooperative.pk)
 
-    current_year = date.today().year
-    prefix = f"{journal.code}-{current_year}-"
+    year = entry_date.year if entry_date else date.today().year
+    prefix = f"{journal.code}-{year}-"
 
     last = (
-        AccountingEntry.all_objects
-        .filter(cooperative=cooperative, journal=journal, entry_number__startswith=prefix)
+        AccountingEntry.all_objects.filter(
+            cooperative=cooperative, journal=journal, entry_number__startswith=prefix
+        )
         .order_by("-entry_number")
         .first()
     )
@@ -64,14 +69,19 @@ def _generate_entry_number(cooperative: Cooperative, journal: Journal) -> str:
         try:
             next_seq = int(last.entry_number.split("-")[-1]) + 1
         except ValueError:
-            next_seq = AccountingEntry.all_objects.filter(
-                cooperative=cooperative, journal=journal,
-            ).count() + 1
+            next_seq = (
+                AccountingEntry.all_objects.filter(
+                    cooperative=cooperative,
+                    journal=journal,
+                ).count()
+                + 1
+            )
 
     return f"{prefix}{str(next_seq).zfill(ENTRY_NUMBER_PADDING)}"
 
 
 # ---- Création d'une écriture ----
+
 
 @transaction.atomic
 def create_accounting_entry(
@@ -93,7 +103,7 @@ def create_accounting_entry(
         raise AccountingError("Une écriture doit contenir au moins deux lignes.")
 
     period = entry_date.strftime("%Y-%m")
-    entry_number = _generate_entry_number(cooperative, journal)
+    entry_number = _generate_entry_number(cooperative, journal, entry_date)
 
     entry = AccountingEntry.objects.create(
         cooperative=cooperative,
@@ -129,6 +139,7 @@ def create_accounting_entry(
 
 
 # ---- Validation d'une écriture ----
+
 
 @transaction.atomic
 def post_entry(*, entry: AccountingEntry, actor) -> AccountingEntry:  # noqa: ANN001
@@ -169,11 +180,12 @@ def post_entry(*, entry: AccountingEntry, actor) -> AccountingEntry:  # noqa: AN
 
 # ---- Grand livre ----
 
+
 def get_general_ledger(
     *,
     account: Account,
-    date_from: Optional[date] = None,
-    date_to: Optional[date] = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
 ) -> list[dict]:
     """
     Retourne les mouvements d'un compte (écriture validées uniquement)
@@ -184,8 +196,7 @@ def get_general_ledger(
     - Passif / Capitaux propres / Produit : crédit augmente le solde
     """
     qs = (
-        AccountingEntryLine.objects
-        .filter(account=account, entry__is_posted=True)
+        AccountingEntryLine.objects.filter(account=account, entry__is_posted=True)
         .select_related("entry", "entry__journal")
         .order_by("entry__entry_date", "entry__created_at")
     )
@@ -204,25 +215,28 @@ def get_general_ledger(
         else:
             running_balance += line.credit - line.debit
 
-        rows.append({
-            "entry_number": line.entry.entry_number,
-            "entry_date": line.entry.entry_date,
-            "journal_code": line.entry.journal.code,
-            "description": line.label or line.entry.description,
-            "debit": line.debit,
-            "credit": line.credit,
-            "running_balance": running_balance,
-        })
+        rows.append(
+            {
+                "entry_number": line.entry.entry_number,
+                "entry_date": line.entry.entry_date,
+                "journal_code": line.entry.journal.code,
+                "description": line.label or line.entry.description,
+                "debit": line.debit,
+                "credit": line.credit,
+                "running_balance": running_balance,
+            }
+        )
 
     return rows
 
 
 # ---- Balance des comptes ----
 
+
 def get_trial_balance(
     *,
     cooperative: Cooperative,
-    period: Optional[str] = None,
+    period: str | None = None,
 ) -> list[dict]:
     """
     Retourne une ligne par compte ayant des mouvements (écritures validées).
@@ -251,19 +265,22 @@ def get_trial_balance(
         debit_total = row["debit_total"] or Decimal("0")
         credit_total = row["credit_total"] or Decimal("0")
         diff = debit_total - credit_total
-        rows.append({
-            "account_code": row["account__code"],
-            "account_name": row["account__name"],
-            "debit_total": debit_total,
-            "credit_total": credit_total,
-            "debit_balance": max(Decimal("0"), diff),
-            "credit_balance": max(Decimal("0"), -diff),
-        })
+        rows.append(
+            {
+                "account_code": row["account__code"],
+                "account_name": row["account__name"],
+                "debit_total": debit_total,
+                "credit_total": credit_total,
+                "debit_balance": max(Decimal("0"), diff),
+                "credit_balance": max(Decimal("0"), -diff),
+            }
+        )
 
     return rows
 
 
 # ---- Tableau de bord comptable ----
+
 
 def get_accounting_dashboard_kpis(*, cooperative: Cooperative) -> dict:
     """
@@ -300,8 +317,7 @@ def get_accounting_dashboard_kpis(*, cooperative: Cooperative) -> dict:
     posted_entries_count = entries_qs.filter(is_posted=True).count()
 
     recent_entries = list(
-        entries_qs.select_related("journal")
-        .order_by("-entry_date", "-created_at")[:5]
+        entries_qs.select_related("journal").order_by("-entry_date", "-created_at")[:5]
     )
 
     return {
@@ -317,10 +333,11 @@ def get_accounting_dashboard_kpis(*, cooperative: Cooperative) -> dict:
 
 # ---- États financiers (CPC & Bilan) ----
 
+
 def get_financial_statements(
     *,
     cooperative: Cooperative,
-    period: Optional[str] = None,
+    period: str | None = None,
 ) -> dict:
     """
     Retourne le Compte de Produits et Charges (CPC) et le Bilan condensé.
@@ -411,4 +428,3 @@ def get_financial_statements(
             "total_passif_and_equity": total_liabilities + total_equity + net_result,
         },
     }
-

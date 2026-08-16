@@ -1,4 +1,5 @@
 """Serializer du journal d'activité — lecture seule, ledger immuable."""
+
 from __future__ import annotations
 
 from rest_framework import serializers
@@ -13,9 +14,16 @@ class AuditLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditLog
         fields = [
-            "id", "actor_name", "actor_email", "action",
-            "target_type", "target_id", "target_repr",
-            "metadata", "ip_address", "created_at",
+            "id",
+            "actor_name",
+            "actor_email",
+            "action",
+            "target_type",
+            "target_id",
+            "target_repr",
+            "metadata",
+            "ip_address",
+            "created_at",
         ]
         read_only_fields = fields
 

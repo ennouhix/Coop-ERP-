@@ -5,7 +5,7 @@
  */
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 
 import { Logo } from "../../shared/ui/Logo";
 import { ZelligePattern } from "../../shared/ui/ZelligePattern";
@@ -90,6 +90,13 @@ export function LoginPage() {
             </button>
           </div>
         </form>
+
+        <p className="mt-6 text-center text-sm text-indigo-300">
+          {t("auth.register.no_account")}{" "}
+          <Link to="/register" className="font-semibold text-ochre-400 hover:text-ochre-300">
+            {t("auth.register.link")}
+          </Link>
+        </p>
       </div>
     </div>
   );

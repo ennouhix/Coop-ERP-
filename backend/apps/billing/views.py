@@ -9,6 +9,7 @@ Endpoints :
 - POST      /api/v1/billing/invoices/{id}/cancel/         -> annulation
 - POST      /api/v1/billing/invoices/{id}/payments/       -> enregistrer un paiement
 """
+
 from __future__ import annotations
 
 from django.shortcuts import get_object_or_404
@@ -40,7 +41,11 @@ class InvoiceListCreateView(generics.ListCreateAPIView):
     ordering_fields = ["issue_date", "due_date", "created_at"]
 
     def get_queryset(self):  # noqa: ANN201
-        return Invoice.objects.select_related("customer", "sales_order").prefetch_related("lines__product", "payments").all()
+        return (
+            Invoice.objects.select_related("customer", "sales_order")
+            .prefetch_related("lines__product", "payments")
+            .all()
+        )
 
     def get_permissions(self):  # noqa: ANN201
         base = [IsAuthenticated(), IsCooperativeMember()]
@@ -61,15 +66,27 @@ class InvoiceListCreateView(generics.ListCreateAPIView):
 
         resolved_lines = []
         for line in data["lines"]:
-            product = get_object_or_404(Product, pk=line["product_id"], cooperative_id=cooperative_id)
+            product = get_object_or_404(
+                Product, pk=line["product_id"], cooperative_id=cooperative_id
+            )
             resolved_lines.append(
-                {"product": product, "description": line["description"], "quantity": line["quantity"], "unit_price": line["unit_price"]}
+                {
+                    "product": product,
+                    "description": line["description"],
+                    "quantity": line["quantity"],
+                    "unit_price": line["unit_price"],
+                }
             )
 
         try:
             invoice = services.create_manual_invoice(
-                cooperative=request.user.cooperative, customer=customer, lines=resolved_lines,
-                actor=request.user, issue_date=data["issue_date"], due_date=data.get("due_date"), notes=data["notes"],
+                cooperative=request.user.cooperative,
+                customer=customer,
+                lines=resolved_lines,
+                actor=request.user,
+                issue_date=data["issue_date"],
+                due_date=data.get("due_date"),
+                notes=data["notes"],
             )
         except services.InvoiceError as exc:
             return Response({"error": {"message": str(exc)}}, status=status.HTTP_400_BAD_REQUEST)
@@ -85,11 +102,16 @@ class InvoiceFromOrderView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        order = get_object_or_404(SalesOrder, pk=data["order_id"], cooperative_id=request.user.cooperative_id)
+        order = get_object_or_404(
+            SalesOrder, pk=data["order_id"], cooperative_id=request.user.cooperative_id
+        )
 
         try:
             invoice = services.generate_invoice_from_sales_order(
-                order=order, actor=request.user, issue_date=data["issue_date"], due_date=data.get("due_date")
+                order=order,
+                actor=request.user,
+                issue_date=data["issue_date"],
+                due_date=data.get("due_date"),
             )
         except services.InvoiceError as exc:
             return Response({"error": {"message": str(exc)}}, status=status.HTTP_400_BAD_REQUEST)
@@ -102,14 +124,20 @@ class InvoiceDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("billing.view")]
 
     def get_queryset(self):  # noqa: ANN201
-        return Invoice.objects.select_related("customer", "sales_order").prefetch_related("lines__product", "payments").all()
+        return (
+            Invoice.objects.select_related("customer", "sales_order")
+            .prefetch_related("lines__product", "payments")
+            .all()
+        )
 
 
 class InvoiceIssueView(APIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("billing.edit")]
 
     def post(self, request: Request, invoice_id: str) -> Response:
-        invoice = get_object_or_404(Invoice, pk=invoice_id, cooperative_id=request.user.cooperative_id)
+        invoice = get_object_or_404(
+            Invoice, pk=invoice_id, cooperative_id=request.user.cooperative_id
+        )
         try:
             services.issue_invoice(invoice=invoice, actor=request.user)
         except services.InvoiceError as exc:
@@ -121,7 +149,9 @@ class InvoiceCancelView(APIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("billing.edit")]
 
     def post(self, request: Request, invoice_id: str) -> Response:
-        invoice = get_object_or_404(Invoice, pk=invoice_id, cooperative_id=request.user.cooperative_id)
+        invoice = get_object_or_404(
+            Invoice, pk=invoice_id, cooperative_id=request.user.cooperative_id
+        )
         try:
             services.cancel_invoice(invoice=invoice, actor=request.user)
         except services.InvoiceError as exc:
@@ -133,15 +163,22 @@ class InvoicePaymentView(APIView):
     permission_classes = [IsAuthenticated, IsCooperativeMember, RequirePermission("billing.edit")]
 
     def post(self, request: Request, invoice_id: str) -> Response:
-        invoice = get_object_or_404(Invoice, pk=invoice_id, cooperative_id=request.user.cooperative_id)
+        invoice = get_object_or_404(
+            Invoice, pk=invoice_id, cooperative_id=request.user.cooperative_id
+        )
         serializer = RecordPaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
         try:
             services.record_payment(
-                invoice=invoice, amount=data["amount"], payment_date=data["payment_date"], actor=request.user,
-                payment_method=data["payment_method"], reference=data["reference"], notes=data["notes"],
+                invoice=invoice,
+                amount=data["amount"],
+                payment_date=data["payment_date"],
+                actor=request.user,
+                payment_method=data["payment_method"],
+                reference=data["reference"],
+                notes=data["notes"],
             )
         except services.PaymentError as exc:
             return Response({"error": {"message": str(exc)}}, status=status.HTTP_400_BAD_REQUEST)

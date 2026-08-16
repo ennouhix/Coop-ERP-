@@ -20,9 +20,10 @@ TenantMiddleware reste en place uniquement comme filet de sécurité pour
 réinitialiser le contexte à None entre deux requêtes traitées par le même
 thread/worker (defense in depth).
 """
+
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -30,7 +31,7 @@ from apps.core.context import set_current_tenant
 
 
 class TenantAwareJWTAuthentication(JWTAuthentication):
-    def authenticate(self, request: Any) -> Optional[tuple]:
+    def authenticate(self, request: Any) -> tuple | None:
         result = super().authenticate(request)
         if result is not None:
             user, _token = result

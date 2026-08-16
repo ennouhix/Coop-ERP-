@@ -1,4 +1,5 @@
 """Serializers du module billing."""
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -14,20 +15,38 @@ class InvoiceLineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InvoiceLine
-        fields = ["id", "product", "product_sku", "description", "quantity", "unit_price", "line_total"]
+        fields = [
+            "id",
+            "product",
+            "product_sku",
+            "description",
+            "quantity",
+            "unit_price",
+            "line_total",
+        ]
         read_only_fields = fields
 
 
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
-        fields = ["id", "amount", "payment_date", "payment_method", "reference", "notes", "created_at"]
+        fields = [
+            "id",
+            "amount",
+            "payment_date",
+            "payment_method",
+            "reference",
+            "notes",
+            "created_at",
+        ]
         read_only_fields = fields
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source="customer.name", read_only=True)
-    order_number = serializers.CharField(source="sales_order.order_number", read_only=True, default=None)
+    order_number = serializers.CharField(
+        source="sales_order.order_number", read_only=True, default=None
+    )
     lines = InvoiceLineSerializer(many=True, read_only=True)
     payments = PaymentSerializer(many=True, read_only=True)
     total_amount = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
@@ -38,10 +57,24 @@ class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         fields = [
-            "id", "invoice_number", "customer", "customer_name", "sales_order", "order_number",
-            "status", "issue_date", "due_date", "notes",
-            "lines", "payments", "total_amount", "amount_paid", "balance_due", "is_overdue",
-            "created_at", "updated_at",
+            "id",
+            "invoice_number",
+            "customer",
+            "customer_name",
+            "sales_order",
+            "order_number",
+            "status",
+            "issue_date",
+            "due_date",
+            "notes",
+            "lines",
+            "payments",
+            "total_amount",
+            "amount_paid",
+            "balance_due",
+            "is_overdue",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "invoice_number", "status", "created_at", "updated_at"]
 
@@ -75,6 +108,8 @@ class InvoiceFromOrderSerializer(serializers.Serializer):
 class RecordPaymentSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("0.01"))
     payment_date = serializers.DateField()
-    payment_method = serializers.ChoiceField(choices=PaymentMethod.choices, default=PaymentMethod.CASH)
+    payment_method = serializers.ChoiceField(
+        choices=PaymentMethod.choices, default=PaymentMethod.CASH
+    )
     reference = serializers.CharField(max_length=100, required=False, allow_blank=True, default="")
     notes = serializers.CharField(required=False, allow_blank=True, default="")

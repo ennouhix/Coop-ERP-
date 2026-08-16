@@ -13,6 +13,7 @@ Personnalisation des modèles (un par type de document) :
 Les permissions s'appuient sur le module RBAC `documents`
 (documents.view pour les téléchargements, documents.edit pour les modèles).
 """
+
 from __future__ import annotations
 
 from django.http import HttpResponse
@@ -44,7 +45,8 @@ class DeliveryNotePdfView(APIView):
     def get(self, request: Request, order_id: str) -> HttpResponse:
         order = get_object_or_404(
             SalesOrder.objects.select_related("cooperative"),
-            pk=order_id, cooperative_id=request.user.cooperative_id,
+            pk=order_id,
+            cooperative_id=request.user.cooperative_id,
         )
         archive = services.generate_document(
             order, DocumentTemplateType.DELIVERY_NOTE, actor=request.user
@@ -58,7 +60,8 @@ class PurchaseOrderPdfView(APIView):
     def get(self, request: Request, order_id: str) -> HttpResponse:
         order = get_object_or_404(
             PurchaseOrder.objects.select_related("cooperative"),
-            pk=order_id, cooperative_id=request.user.cooperative_id,
+            pk=order_id,
+            cooperative_id=request.user.cooperative_id,
         )
         archive = services.generate_document(
             order, DocumentTemplateType.PURCHASE_ORDER, actor=request.user
@@ -72,7 +75,8 @@ class ReceiptPdfView(APIView):
     def get(self, request: Request, order_id: str) -> HttpResponse:
         order = get_object_or_404(
             PurchaseOrder.objects.select_related("cooperative"),
-            pk=order_id, cooperative_id=request.user.cooperative_id,
+            pk=order_id,
+            cooperative_id=request.user.cooperative_id,
         )
         archive = services.generate_document(
             order, DocumentTemplateType.RECEIPT, actor=request.user
@@ -95,10 +99,14 @@ class DocumentTemplateListView(APIView):
         for template_type in DocumentTemplateType.values:
             instance = templates.get(template_type)
             if instance is None:
-                data.append(DocumentTemplateTypeSerializer({
-                    "template_type": template_type,
-                    "template_type_label": DocumentTemplateType(template_type).label,
-                }).data)
+                data.append(
+                    DocumentTemplateTypeSerializer(
+                        {
+                            "template_type": template_type,
+                            "template_type_label": DocumentTemplateType(template_type).label,
+                        }
+                    ).data
+                )
             else:
                 data.append(DocumentTemplateSerializer(instance).data)
         return Response(data)
@@ -118,7 +126,8 @@ class DocumentTemplateDetailView(APIView):
 
         cooperative_id = request.user.cooperative_id
         template = DocumentTemplate.objects.filter(
-            cooperative_id=cooperative_id, template_type=template_type,
+            cooperative_id=cooperative_id,
+            template_type=template_type,
         ).first()
 
         serializer = DocumentTemplateSerializer(
@@ -128,11 +137,13 @@ class DocumentTemplateDetailView(APIView):
 
         if template is None:
             template = DocumentTemplate(
-                cooperative_id=cooperative_id, template_type=template_type,
+                cooperative_id=cooperative_id,
+                template_type=template_type,
                 created_by=request.user,
             )
         template = serializer.save(
-            template_type=template_type, cooperative_id=cooperative_id,
+            template_type=template_type,
+            cooperative_id=cooperative_id,
             updated_by=request.user,
         )
         return Response(DocumentTemplateSerializer(template).data, status=status.HTTP_200_OK)

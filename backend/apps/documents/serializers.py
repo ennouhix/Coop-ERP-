@@ -1,4 +1,5 @@
 """Serializers du module documents (M16)."""
+
 from __future__ import annotations
 
 from rest_framework import serializers
@@ -12,8 +13,13 @@ class DocumentTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentTemplate
         fields = [
-            "template_type", "template_type_label", "header_text", "footer_text",
-            "terms_text", "accent_color", "show_logo",
+            "template_type",
+            "template_type_label",
+            "header_text",
+            "footer_text",
+            "terms_text",
+            "accent_color",
+            "show_logo",
         ]
         read_only_fields = ["template_type"]
 

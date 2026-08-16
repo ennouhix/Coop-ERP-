@@ -1,6 +1,7 @@
 """
 Tests de gestion des informations de la coopérative (/me).
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
@@ -21,18 +22,27 @@ class CooperativeSettingsTestCase(APITestCase):
         self.cooperative = Cooperative.objects.create(name="Coopérative Argane", slug="argane")
 
         self.owner = User.objects.create_user(
-            username="owner", email="owner@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="owner",
+            username="owner",
+            email="owner@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="owner",
         )
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
 
         other_coop = Cooperative.objects.create(name="Autre Coopérative", slug="autre")
         self.foreign_owner = User.objects.create_user(
-            username="foreign", email="foreign@autre.ma", password="MotDePasseSolide123",
-            cooperative=other_coop, role="owner",
+            username="foreign",
+            email="foreign@autre.ma",
+            password="MotDePasseSolide123",
+            cooperative=other_coop,
+            role="owner",
         )
 
         self.me_url = reverse("cooperatives:me")
@@ -49,7 +59,9 @@ class CooperativeSettingsTestCase(APITestCase):
 
     def test_owner_can_update_cooperative(self) -> None:
         self._auth(self.owner)
-        response = self.client.patch(self.me_url, {"legal_name": "Argane SARL", "ice": "001234567000012"})
+        response = self.client.patch(
+            self.me_url, {"legal_name": "Argane SARL", "ice": "001234567000012"}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.cooperative.refresh_from_db()
         self.assertEqual(self.cooperative.legal_name, "Argane SARL")

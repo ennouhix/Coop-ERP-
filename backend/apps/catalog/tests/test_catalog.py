@@ -1,6 +1,7 @@
 """
 Tests du module catalog.
 """
+
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
@@ -10,7 +11,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.catalog.models import Category, Product, Unit
+from apps.catalog.models import Category, Unit
 from apps.catalog.services import create_product
 from apps.cooperatives.models import Cooperative
 
@@ -24,19 +25,30 @@ class CatalogTestCase(APITestCase):
         self.other_cooperative = Cooperative.objects.create(name="Autre Coop", slug="autre")
 
         self.admin = User.objects.create_user(
-            username="admin", email="admin@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="admin",
+            username="admin",
+            email="admin@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="admin",
         )
         self.staff = User.objects.create_user(
-            username="staff", email="staff@argane.ma", password="MotDePasseSolide123",
-            cooperative=self.cooperative, role="staff",
+            username="staff",
+            email="staff@argane.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.cooperative,
+            role="staff",
         )
         self.foreign_user = User.objects.create_user(
-            username="foreign", email="foreign@autre.ma", password="MotDePasseSolide123",
-            cooperative=self.other_cooperative, role="owner",
+            username="foreign",
+            email="foreign@autre.ma",
+            password="MotDePasseSolide123",
+            cooperative=self.other_cooperative,
+            role="owner",
         )
 
-        self.unit = Unit.objects.create(cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight")
+        self.unit = Unit.objects.create(
+            cooperative=self.cooperative, name="Kilogramme", symbol="kg", unit_type="weight"
+        )
 
         self.units_url = reverse("catalog:unit-list-create")
         self.categories_url = reverse("catalog:category-list-create")
@@ -50,12 +62,16 @@ class CatalogTestCase(APITestCase):
 
     def test_admin_can_create_unit(self) -> None:
         self._auth(self.admin)
-        response = self.client.post(self.units_url, {"name": "Litre", "symbol": "L", "unit_type": "volume"})
+        response = self.client.post(
+            self.units_url, {"name": "Litre", "symbol": "L", "unit_type": "volume"}
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_staff_cannot_create_unit(self) -> None:
         self._auth(self.staff)
-        response = self.client.post(self.units_url, {"name": "Litre", "symbol": "L", "unit_type": "volume"})
+        response = self.client.post(
+            self.units_url, {"name": "Litre", "symbol": "L", "unit_type": "volume"}
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_can_view_units(self) -> None:
@@ -83,7 +99,9 @@ class CatalogTestCase(APITestCase):
 
     def test_category_hierarchy_cycle_is_rejected(self) -> None:
         parent = Category.objects.create(cooperative=self.cooperative, name={"fr": "Alimentaire"})
-        child = Category.objects.create(cooperative=self.cooperative, name={"fr": "Huiles"}, parent=parent)
+        child = Category.objects.create(
+            cooperative=self.cooperative, name={"fr": "Huiles"}, parent=parent
+        )
 
         self._auth(self.admin)
         url = reverse("catalog:category-detail", args=[parent.id])
@@ -100,7 +118,9 @@ class CatalogTestCase(APITestCase):
         self.assertEqual(response.data["sku"], "PRD-00001")
 
         second = self.client.post(
-            self.products_url, {"name": {"fr": "Savon noir"}, "unit": str(self.unit.id)}, format="json"
+            self.products_url,
+            {"name": {"fr": "Savon noir"}, "unit": str(self.unit.id)},
+            format="json",
         )
         self.assertEqual(second.data["sku"], "PRD-00002")
 
@@ -127,7 +147,10 @@ class CatalogTestCase(APITestCase):
 
     def test_duplicate_barcode_in_same_cooperative_rejected(self) -> None:
         create_product(
-            cooperative=self.cooperative, name={"fr": "Produit A"}, unit=self.unit, barcode="1234567890"
+            cooperative=self.cooperative,
+            name={"fr": "Produit A"},
+            unit=self.unit,
+            barcode="1234567890",
         )
         self._auth(self.admin)
         payload = {"name": {"fr": "Produit B"}, "unit": str(self.unit.id), "barcode": "1234567890"}
@@ -142,7 +165,9 @@ class CatalogTestCase(APITestCase):
         self.assertEqual(len(results), 0)
 
     def test_deactivate_and_reactivate_product(self) -> None:
-        product = create_product(cooperative=self.cooperative, name={"fr": "Produit A"}, unit=self.unit)
+        product = create_product(
+            cooperative=self.cooperative, name={"fr": "Produit A"}, unit=self.unit
+        )
         self._auth(self.admin)
 
         deactivate_url = reverse("catalog:product-deactivate", args=[product.id])
@@ -167,7 +192,9 @@ class CatalogTestCase(APITestCase):
         self.assertEqual(results[0]["id"], str(product_in.id))
 
     def test_sku_immutable_on_update(self) -> None:
-        product = create_product(cooperative=self.cooperative, name={"fr": "Produit A"}, unit=self.unit)
+        product = create_product(
+            cooperative=self.cooperative, name={"fr": "Produit A"}, unit=self.unit
+        )
         self._auth(self.admin)
         url = reverse("catalog:product-detail", args=[product.id])
         response = self.client.patch(url, {"sku": "HACKED-9999"}, format="json")

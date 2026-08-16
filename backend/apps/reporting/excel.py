@@ -4,6 +4,7 @@ de colonnes ajustées, une feuille par export. Les lignes proviennent de
 `data.py` (source unique) ; les `Decimal` sont écrits en numériques pour
 rester sommables dans Excel.
 """
+
 from __future__ import annotations
 
 from datetime import date
@@ -55,12 +56,14 @@ def _to_buffer(workbook: Workbook) -> BytesIO:
 
 # --- Adhérents ---
 
+
 def export_members_excel(cooperative: Cooperative) -> BytesIO:
     headers, rows = data.members_rows(cooperative)
     return from_rows("Membres", headers, rows)
 
 
 # --- Mouvements de stock ---
+
 
 def export_stock_movements_excel(
     cooperative: Cooperative,
@@ -70,13 +73,17 @@ def export_stock_movements_excel(
     warehouse_id: str | None = None,
 ) -> BytesIO:
     headers, rows = data.stock_movements_rows(
-        cooperative, date_from=date_from, date_to=date_to,
-        movement_type=movement_type, warehouse_id=warehouse_id,
+        cooperative,
+        date_from=date_from,
+        date_to=date_to,
+        movement_type=movement_type,
+        warehouse_id=warehouse_id,
     )
     return from_rows("Mouvements de stock", headers, rows)
 
 
 # --- Commandes de vente ---
+
 
 def export_sales_orders_excel(
     cooperative: Cooperative,
@@ -86,13 +93,17 @@ def export_sales_orders_excel(
     customer_id: str | None = None,
 ) -> BytesIO:
     headers, rows = data.sales_orders_rows(
-        cooperative, date_from=date_from, date_to=date_to,
-        status=status, customer_id=customer_id,
+        cooperative,
+        date_from=date_from,
+        date_to=date_to,
+        status=status,
+        customer_id=customer_id,
     )
     return from_rows("Commandes de vente", headers, rows)
 
 
 # --- Commandes d'achat ---
+
 
 def export_purchase_orders_excel(
     cooperative: Cooperative,
@@ -102,13 +113,17 @@ def export_purchase_orders_excel(
     supplier_id: str | None = None,
 ) -> BytesIO:
     headers, rows = data.purchase_orders_rows(
-        cooperative, date_from=date_from, date_to=date_to,
-        status=status, supplier_id=supplier_id,
+        cooperative,
+        date_from=date_from,
+        date_to=date_to,
+        status=status,
+        supplier_id=supplier_id,
     )
     return from_rows("Commandes d'achat", headers, rows)
 
 
 # --- Partenaires ---
+
 
 def export_partners_excel(
     cooperative: Cooperative,
@@ -121,6 +136,7 @@ def export_partners_excel(
 
 # --- Factures ---
 
+
 def export_invoices_excel(
     cooperative: Cooperative,
     date_from: date | None = None,
@@ -129,13 +145,17 @@ def export_invoices_excel(
     customer_id: str | None = None,
 ) -> BytesIO:
     headers, rows = data.invoices_rows(
-        cooperative, date_from=date_from, date_to=date_to,
-        status=status, customer_id=customer_id,
+        cooperative,
+        date_from=date_from,
+        date_to=date_to,
+        status=status,
+        customer_id=customer_id,
     )
     return from_rows("Factures", headers, rows)
 
 
 # --- Niveaux de stock ---
+
 
 def export_stock_levels_excel(
     cooperative: Cooperative,
@@ -147,12 +167,15 @@ def export_stock_levels_excel(
 
 # --- Journal comptable ---
 
+
 def export_accounting_journal_excel(
     cooperative: Cooperative,
     period: str | None = None,
     journal_id: str | None = None,
 ) -> BytesIO:
     headers, rows = data.accounting_journal_rows(
-        cooperative, period=period, journal_id=journal_id,
+        cooperative,
+        period=period,
+        journal_id=journal_id,
     )
     return from_rows("Journal comptable", headers, rows)

@@ -1,6 +1,7 @@
 """
 Validateurs pour les identifiants légaux marocains.
 """
+
 from __future__ import annotations
 
 from django.core.validators import RegexValidator
